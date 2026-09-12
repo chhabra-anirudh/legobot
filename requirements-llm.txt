@@ -1,0 +1,2 @@
+# LLM structure generation. Not needed to run the simulation or the checker.
+anthropic>=1,<2

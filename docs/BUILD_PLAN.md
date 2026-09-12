@@ -143,6 +143,16 @@ support or connectivity elsewhere. Cache several fully checked demo structures.
 Gate: a valid small structure produces executable steps; a floating voxel and an
 intentionally blocked placement are rejected for the correct reason.
 
+**Status (2026-09-12): the proposal and checking half is implemented** in
+`compiler/` — prompt to voxel model via `claude-opus-5` with structured output,
+then deterministic checks for schema, direct support, 6-connectivity, colors,
+and cube/layer/footprint/inventory budgets, with a re-checked repair round when a
+proposal fails. `compiler/examples/dog.json` is a 45-cube accepted structure and
+`dog-floating-rejected.json` is the negative control. **Not implemented:** the
+executor half — calibrated build coordinates, tool poses, yaw search, clearance
+filtering, and path validation. Placement order is currently a bottom-up sort,
+not a reachability-checked sequence.
+
 ### 3. Contact simulation and demonstration collection
 
 Build a contact simulation from the existing model. MuJoCo is the proposed engine;
@@ -174,6 +184,16 @@ not wait for the robot to start the imitation-learning workstream: generate the
 demonstrations from a preconfigured scripted grasp primitive in simulation, and
 label every resulting artifact as simulated. Switch the expert to teleoperated or
 hand-guided demonstrations only once hardware is actually available.
+
+**Outcome (2026-09-12): the one-third proposal below was tested and not adopted.**
+The contact experiment settled on a grasp at **half cube height** (`--depth .5`)
+with the EEF shifted **-18 mm in X** from the cube centre, because the foam pad
+centre sits 18 mm from the nominal tool origin. Moving the bare fingers lower
+alone was rejected for causing table contact. `sim/assembly_config.json` now uses
+`tool_grasp_point_m = [0.018, 0, 0.004]`, matching `sim/contact_grasp.py`. See
+[CENTERED_GRASP.md](CENTERED_GRASP.md). The proposal is kept below because the
+depth fraction remains configurable and the reasoning still applies if pad
+geometry changes after real calibration.
 
 The proposed primitive approaches from directly above and grips opposing side
 faces near the top of the cube. Defined in `root`, with cube height `h` (25.4 mm) and the tool z-axis
@@ -209,8 +229,9 @@ probe and validate contact before adopting the new pose.
 A contact reference one third of the height below the top is not the same as a
 contact patch contained in the upper third. Measure the patch's actual vertical
 extent and ensure that both fingers overlap the cube sides without reaching the
-table or lower layer. The proposed fraction is provisional until validated in
-contact simulation and later against the physical gripper.
+table or lower layer. This is what ruled the fraction out in simulation: the
+soft-pad model holds at half height and the higher band was not validated. The
+question returns whenever pad geometry or the measured contact patch changes.
 
 Vertical approach, grasp depth, hover clearance, and yaw remain part of the
 recorded episode parameters so a later hardware expert can be compared against
@@ -289,10 +310,10 @@ an authorization or a verified rule set.
 1. Verify gripper contact geometry and replace provisional jaw settings with a
    documented calibration model.
 2. Establish a minimal one-cube contact scene and a grasp-success measurement.
-3. Implement the preconfigured top-down grasp primitive (hover above the cube,
-   vertical descent to one third of the cube height below the top face, close,
-   vertical lift) as the default no-robot-access expert, and add observation/action
-   recording to it.
+3. Extend the preconfigured top-down grasp primitive (hover above the cube,
+   vertical descent to the validated half-height grasp, close, vertical lift) into
+   a failure-aware expert with observation/action recording. The primitive exists
+   in `sim/contact_grasp.py`; the frozen training contract does not.
 4. In the compiler workstream, agree on the structure and placement schemas and
    implement supported two-layer examples against a fake executor.
 5. Train the first behavior-cloning model only once demonstrations reflect a

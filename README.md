@@ -13,9 +13,11 @@ joint-limited inverse kinematics and animated finger joints. Grasp attachment is
 idealized. An isolated [contact experiment](docs/CONTACT_SIM.md) now tests a free cube under
 gravity using the finger joints. The [centered foam-pad model](docs/CENTERED_GRASP.md) passes nominal lift/hold/return
 checks with measured force/slip gates and configurable colors. Foam parameters
-remain provisional; heavier-load slip and real calibration are unresolved. Full-arm collision
-checking, learned pickup, vision, the voxel compiler, and hardware execution are
-not implemented yet.
+remain provisional; heavier-load slip and real calibration are unresolved. A [structure compiler](compiler/README.md) turns a prompt into a
+voxel model with Claude and checks it deterministically for support,
+connectivity, colors, and budgets. Full-arm collision checking, learned pickup,
+vision, placement/tool-pose compilation, and hardware execution are not
+implemented yet.
 
 ## Run the baseline
 
@@ -44,6 +46,7 @@ conventions and learning walkthrough. These scripts do not command the real robo
 - `docs/BUILD_PLAN.md`: agreed working proposal, milestones, and technical caveats.
 - `docs/HANDOFF.md`: current implementation, task ownership, verification, blockers.
 - `sim/`: simulation scripts, tests, configuration, and supplied URDF/meshes.
+- `compiler/`: prompt to voxel structure, deterministic checks, and examples.
 - `AGENTS.md`: handoff and collaboration instructions for coding agents.
 
 Update the handoff at each completed milestone so the next teammate can continue

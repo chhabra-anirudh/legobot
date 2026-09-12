@@ -22,11 +22,19 @@ contact physics and its nominal release fix are now integrated into local `main`
 - **Offline expert:** diagnostic top-down descend/close/lift/hold/lower/open/retreat,
   with configurable depth. Not yet failure-aware or a frozen training interface.
 - **Outputs:** per-episode result, 50 Hz JSONL trace, optional Rerun recording.
+- **Prompt to voxel structure:** `compiler/` turns a prompt into a checked voxel
+  model using `claude-opus-5` with structured output, then applies deterministic
+  schema/support/connectivity/budget checks and a re-checked repair round. Two
+  cached examples: an accepted 45-cube dog and a negative control. The executor
+  half (build coordinates, tool poses, clearance) is not implemented.
 
 ## Latest verification and remaining limits
 
-All **26 tests pass** with physics dependencies installed. The original kinematic
-plan still validates 396 frames. Refined physics recording generated successfully.
+All **26 sim tests and 22 compiler tests pass** with physics dependencies
+installed. The kinematic plan now validates **409** frames: `tool_grasp_point_m`
+gained the 18 mm X offset so the assembly grasps where the foam pads actually
+meet the cube, instead of putting the nominal tool origin over the cube centre
+and contacting near the edge. Frame count changed because the IK targets moved. Refined physics recording generated successfully.
 
 [Refined development checks](contact_refined_results.json): five translated nominal
 cases pass full hold/return checks with ~**0.752 mm** final error, below the unchanged
@@ -55,6 +63,13 @@ python3 -m venv .venv
 .venv/bin/python sim/simulate_assembly.py --check
 .venv/bin/python sim/contact_grasp.py --output outputs/contact --save /tmp/contact.rrd
 .venv/bin/python sim/evaluate_contact.py --output outputs/evaluation.json
+
+# Structure generation (needs the anthropic SDK and API credentials):
+.venv/bin/python -m pip install -r requirements-llm.txt
+.venv/bin/python compiler/generate.py "a simple dog" --output outputs/dog.json
+.venv/bin/python compiler/generate.py "a simple dog" --offline   # no model access
+.venv/bin/python compiler/check.py compiler/examples/dog.json --order
+.venv/bin/python -m unittest discover -s compiler -p 'test_*.py'
 ```
 
 CoACD is only needed for asset regeneration (`requirements-collision.txt`), not
@@ -70,7 +85,7 @@ normal execution. See [CONTACT_SIM.md](CONTACT_SIM.md) and
 | 2 | Add failure-aware stage transitions and freeze observation/action timing, units, and frames | Robotics/ML, unassigned |
 | 3 | Generate successful contact demonstrations with pose/noise variation; split by episode | ML, depends on 1–2 |
 | 4 | Train behavior cloning and evaluate against the scripted expert on held-out scenes | ML, depends on 3 |
-| Parallel | Freeze voxel/placement schemas; supported two-layer examples and fake executor | Compiler, unassigned |
+| Parallel | Voxel schema and checker are implemented in `compiler/`; **next** is the placement side: calibrated build coordinates, tool poses, clearance filtering, and a fake executor for supported two-layer examples | Compiler, unassigned |
 | Parallel | Confirm robot API, feedback, access, fixtures, and calibration procedure | Hardware, unassigned |
 
 **Next robotics action:** validate real foam geometry/compliance and heavier-cube
@@ -128,6 +143,36 @@ this graphics driver. Browser serving starts successfully with:
 `.venv/bin/rerun --serve-web --bind 127.0.0.1 --web-viewer-port 9090 outputs/contact.rrd outputs/assembly.rrd`.
 Open `http://127.0.0.1:9090?url=rerun%2Bhttp%3A%2F%2Flocalhost%3A9876%2Fproxy`.
 Both recordings loaded into the local server; browser rendering is not verified.
+
+## Prompt to voxel structure, and the centered assembly grasp (2026-09-12)
+
+Branch `fix/assembly-centered-grasp`, based on `fix/centered-grasp-colors`.
+
+`sim/assembly_config.json` now sets `tool_grasp_point_m = [0.018, 0, 0.004]`, so
+the assembly's EEF-to-cube-centre offset is `[-0.018, 0, 0.004]` and matches
+`sim/contact_grasp.py`. Before this the assembly placed the nominal tool origin
+over the cube centre while the foam pads sit 18 mm away in X, so the fingers met
+the cube near its edge. Depth was already correct at half height.
+
+`compiler/` is new: `schema.py` (structure schema and deterministic checks),
+`generate.py` (prompt to structure via `claude-opus-5` structured output, plus a
+hand-authored offline library), `preview.py` (text preview), `check.py` (check a
+saved file). `requirements-llm.txt` adds the `anthropic` SDK; it is not needed for
+simulation. See [compiler/README.md](../compiler/README.md).
+
+Support is direct support only, so overhangs are rejected. A standing figure with
+legs is therefore not buildable, and recognisable subjects come out as flat
+silhouettes at `z=0`. The dog example was generated live and accepted on the first
+attempt (45 cubes, one layer). Structures record the `source` that produced them;
+hand-authored shapes are labelled `offline_library` and are never presented as
+model output.
+
+Verified: 22 compiler tests, 26 sim tests, `simulate_assembly.py --check` at 409
+poses, and both Rerun recordings regenerated. Structure checking is a rule check
+under provisional limits, not evidence that a build will physically succeed. The
+default cube/layer/footprint budgets and the per-color inventory are unconfirmed.
+Next on this track: calibrated build coordinates and tool poses, finger clearance
+filtering, and a fake executor.
 
 ## Latest override: user-confirmed soft fingers and centered colored replay
 
