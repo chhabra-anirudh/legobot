@@ -5,7 +5,7 @@ workstream. Individual teammate assignments are not yet confirmed.
 
 ## Current milestone
 
-Repository bootstrap and finger-gripper kinematic baseline. The shared source of
+Mesh-based gripper calibration on `feat/gripper-calibration`. The shared source of
 truth is this repository, not the earlier `battle_of_schools_hackathon` files.
 See [BUILD_PLAN.md](BUILD_PLAN.md) for the combined hackathon and ML proposal.
 
@@ -29,22 +29,26 @@ compiler. Playback time does not enforce physical actuator speed/acceleration.
 
 Cube size (25.4 mm) and finger-gripper hardware were confirmed by the user.
 Table positions, grasp point, and 0.35/0.19 rad open/grasp angles are provisional.
-The teammate plan's exact jaw-width figures have not been independently validated.
+The mesh probe now shows a 31.42 mm gap at the provisional 0.19 rad angle;
+this does not grip a 25.4 mm cube at the configured depth. See
+[GRIPPER_CALIBRATION.md](GRIPPER_CALIBRATION.md). Physical calibration is pending.
 The solver starts at an approach pose, not a physical startup/home configuration.
 
 ## Next tasks — claim before editing shared files
 
 | Priority | Task and completion criterion | Owner / branch |
 | --- | --- | --- |
-| 1 | Verify finger contact geometry; document jaw width vs angle and tool grasp point | Unassigned — Robotics |
+| 1 | Verify finger contact geometry; document jaw width vs angle and tool grasp point | Codex — `feat/gripper-calibration`; mesh probe complete, physical measurements pending |
 | 2 | Minimal contact simulator: cube can be lifted and held under gravity without idealized attachment | Unassigned — Robotics/ML |
 | 3 | Freeze structure/placement interfaces; validate supported two-layer examples against fake executor | Unassigned — Compiler |
 | 4 | Identify robot API, feedback, camera, fixtures, actual access time; measure grasp repeatability | Unassigned — Hardware/integration |
 | 5 | Record successful expert episodes with observation/action contract and held-out split | Unassigned — ML; depends on task 2 |
 | 6 | Behavior-cloning baseline and held-out evaluation against scripted expert | Unassigned — ML; depends on task 5 |
 
-**Next robotics action:** inspect the actual finger contact zone and establish a
-calibration procedure. Then add a one-cube contact scene. Do not train on the
+**Next robotics action:** add a one-cube contact scene using the documented
+geometric candidate and validate finger collision proxies, table clearance, and
+a held-lift success signal. Carry out the physical calibration procedure when
+robot access is available. Do not train on the
 current artificial attachment and label it a learned physical grasp.
 
 ## Reproduction and verification
@@ -85,13 +89,18 @@ exists. See [CONTRIBUTING](../CONTRIBUTING.md).
 - Real jaw calibration, magnetic behavior, table pose, and layered cube pitch.
 - Available work hours, robot access, and organizer rules on pre-event work.
 
-## Repository sync blocker
+## Latest verification and sync
 
-The local bootstrap is committed on `main`, but the push to
-`https://github.com/chhabra-anirudh/legobot.git` failed: Git's configured
-`credential-manager-core` helper is unavailable and GitHub rejected HTTPS
-credentials. GitHub CLI is not installed in this environment. Authenticate this
-checkout with an approved GitHub credential helper or SSH setup, then run
-`git push -u origin main`. Do not put tokens in this file or in chat. Fetch and
-inspect remote history first if teammates have initialized the repository since
-this clone. Remove this blocker after confirming a successful push.
+The user manually pushed bootstrap commits; `git fetch origin` succeeded before
+this work and local `main` matched `origin/main`. The old sync blocker is resolved.
+
+This milestone adds triangle-clipped finger-envelope measurements, a JSON report,
+a width-matching geometric candidate, and a physical calibration procedure.
+All 11 tests pass (5 existing + 6 geometry tests), and the unchanged assembly
+still validates 396 frames. Commands were run with the existing parent Python
+3.13/Rerun environment. No physical grasp is claimed and default grasp settings
+were deliberately left provisional pending contact validation.
+
+The candidate is 0.153774 rad with a +1.101 mm local Y centre correction. At the
+configured 0.19 rad angle the cube has clearance on both sides. Do not generate
+successful physical-grasp labels from the existing idealized attachment.
