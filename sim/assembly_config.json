@@ -27,7 +27,7 @@
   "cartesian_step_m": 0.005,
   "frame_seconds": 0.05,
   "tool_grasp_point_m": [
-    0,
+    0.018,
     0,
     0.004
   ],
