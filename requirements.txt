@@ -1,0 +1,3 @@
+# Rerun version validated with the imported simulation.
+rerun-sdk==0.37.2
+numpy>=1.24

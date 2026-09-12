@@ -1,0 +1,15 @@
+[project]
+name = "bb-urdf"
+version = "0.2.0"
+description = "Visualize the urdf_v1 robot URDF in Rerun"
+# Matches the validated Rerun version.
+requires-python = ">=3.10"
+dependencies = [
+    "rerun-sdk==0.37.2",
+    "numpy>=1.24",
+]
+
+[tool.uv]
+# This project is just scripts (visualize_urdf.py) — there's nothing to build or
+# install, so `uv sync` only provisions the dependencies into ./.venv.
+package = false

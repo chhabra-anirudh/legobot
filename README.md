@@ -15,7 +15,7 @@ compiler, and hardware execution are not implemented yet.
 
 ## Run the baseline
 
-Python 3.9+ is required. From the repository root:
+Python 3.10+ is required. From the repository root:
 
 ```sh
 python3 -m venv .venv

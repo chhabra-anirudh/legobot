@@ -62,6 +62,14 @@ Baseline checks: five tests cover joint limits/orientation, final position withi
 IK rejection. Default sequence generates 396 frames. Headless replay contains
 54 links and 50 meshes. These are numerical results, not physical success rates.
 
+The imported `sim/` was checked using the existing Python 3.13 environment with
+Rerun 0.37.2: all five tests, `--check`, and headless recording passed after
+relocation. A fresh-environment install has not yet been exercised. The viewer
+default URDF path was corrected to resolve the included model.
+
+Bootstrap commits are unsigned: the configured GPG database was locked and timed
+out. Signing was disabled per command only; user Git settings were not changed.
+
 ## Handoff protocol
 
 Before stopping, update this file with the current milestone, changed behavior,
