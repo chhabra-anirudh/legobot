@@ -1,132 +1,124 @@
 # Live handoff — start here
 
-Last updated: 2026-09-12. Maintainer for this handoff: current robotics/simulation
-workstream. Individual teammate assignments are not yet confirmed.
+Updated 2026-09-12. Active work: Codex, robotics/simulation,
+integration into **`main`**. Other individual owners are unassigned.
 
-## Current milestone
+## Current state
 
-Integrated gripper geometry tooling and offline expert plan on `main`. The shared source of
-truth is this repository, not the earlier `battle_of_schools_hackathon` files.
-See [BUILD_PLAN.md](BUILD_PLAN.md) for the combined hackathon and ML proposal.
+The shared source of truth is this repository. `main` includes the gripper geometry
+and offline-plan merges (2646ccf), plus `feat/contact-grasp` through 9ec4dea:
+contact physics and its nominal release fix are now integrated into local `main`.
 
-### Implemented
+- **Kinematic assembly:** actual URDF, left-arm FK/IK, three 25.4 mm cubes, animated
+  mimic fingers, 396 frames. Cube attachment remains idealized in this old replay.
+- **Geometry tools:** triangle-clipped jaw-envelope report and physical calibration
+  procedure. The old 0.19 rad animation angle does not actually close on the cube
+  at its configured depth; keep it labeled an animation setting.
+- **Contact experiment:** free cube under gravity, dynamic finger joints with mimic
+  coupling, gripper following a mocap target. No constraint attaches the cube.
+- **Refined collision assets:** CoACD components with source/version/asset hashes.
+  Contact includes sliding and spin friction. Default is `decomposed`; `mesh_hulls`
+  and invented `pads` modes remain explicit comparison controls.
+- **Offline expert:** diagnostic top-down descend/close/lift/hold/lower/open/retreat,
+  with configurable depth. Not yet failure-aware or a frozen training interface.
+- **Outputs:** per-episode result, 50 Hz JSONL trace, optional Rerun recording.
 
-- [x] Supplied BracketBot URDF and meshes; Rerun viewer.
-- [x] Left-arm FK and damped-least-squares IK with joint limits.
-- [x] Three 25.4 mm cubes and configurable supply/table/stack locations.
-- [x] Approach, descend, close, attach, lift, transfer, place, release, open, retreat.
-- [x] Both simulated fingers move using the URDF mimic relation.
-- [x] Attachment preserves the cube centre at pickup and follows the actual tool.
-- [x] Numerical regression tests and headless recording path.
-- [x] Merged plan and contributor/agent handoff instructions.
+## Latest verification and remaining limits
 
-### Known limits
+All **20 tests pass** with physics dependencies installed. The original kinematic
+plan still validates 396 frames. Refined physics recording generated successfully.
 
-This is kinematics only. Attachment/release is idealized; cubes do not experience
-gravity or contact and remain axis-aligned. There are no collision checks,
-magnetic dynamics, hardware commands, learned policy, camera integration, or voxel
-compiler. Playback time does not enforce physical actuator speed/acceleration.
+[Refined development checks](contact_refined_results.json): five translated nominal
+cases pass full hold/return checks with ~**0.752 mm** final error, below the unchanged
+3 mm limit. The 40 g case also passes. Zero spin friction and coarse hull controls
+fail placement; friction=0.5 gives ~3.46 mm error and fails. Friction=0 produces
+solver warnings and is marked numerically invalid. Open fingers fail lift cleanly.
+Full success also checks final tilt/speed and finger-table contact.
 
-Cube size (25.4 mm) and finger-gripper hardware were confirmed by the user.
-Table positions, grasp point, and 0.35/0.19 rad open/grasp angles are provisional.
-The mesh probe now shows a 31.42 mm gap at the provisional 0.19 rad angle;
-this does not grip a 25.4 mm cube at the configured depth. See
-[GRIPPER_CALIBRATION.md](GRIPPER_CALIBRATION.md). Physical calibration is pending.
-The solver starts at an approach pose, not a physical startup/home configuration.
+These are small development checks with **perfect cube XY**, not reliability,
+perception robustness, hardware, or ML evaluation. Friction, inertia, gains, and
+contact proxies remain uncalibrated. Finger-to-finger collisions are excluded.
+There is no full-arm contact/dynamics, magnetic model, robot bridge, vision,
+voxel compiler, trained policy, or deployment-quality expert.
+
+Physics uses `experiment_table` (table Z=0), **not** calibrated robot `root`.
+Traces explicitly use internal WXYZ quaternions; future public contracts use XYZW.
+Warning handling is process-global: run episodes sequentially or in separate
+processes. Warnings invalidate success and are preserved in result JSON.
+
+## Reproduce
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-physics.txt
+.venv/bin/python -m unittest discover -s sim -p 'test_*.py'
+.venv/bin/python sim/simulate_assembly.py --check
+.venv/bin/python sim/contact_grasp.py --output outputs/contact --save /tmp/contact.rrd
+.venv/bin/python sim/evaluate_contact.py --output outputs/evaluation.json
+```
+
+CoACD is only needed for asset regeneration (`requirements-collision.txt`), not
+normal execution. See [CONTACT_SIM.md](CONTACT_SIM.md) and
+[GRIPPER_CALIBRATION.md](GRIPPER_CALIBRATION.md). Generated runs belong in ignored
+`outputs/`; only small evaluation summaries and required collision assets are tracked.
 
 ## Next tasks — claim before editing shared files
 
-| Priority | Task and completion criterion | Owner / branch |
+| Priority | Next concrete outcome | Owner |
 | --- | --- | --- |
-| 1 | Verify finger contact geometry; document jaw width vs angle and tool grasp point | Mesh probe merged; physical measurements pending / owner unassigned |
-| 2 | Minimal contact simulator: cube can be lifted and held under gravity without idealized attachment | Unassigned — Robotics/ML |
-| 3 | Freeze structure/placement interfaces; validate supported two-layer examples against fake executor | Unassigned — Compiler |
-| 4 | Identify robot API, feedback, camera, fixtures, actual access time; measure grasp repeatability | Unassigned — Hardware/integration |
-| 5 | Implement simulated top-down expert with configurable grasp depth; verify contacts before labeling success | Unassigned — Robotics/ML; depends on task 2 |
-| 6 | Record successful expert episodes with observation/action contract and held-out split | Unassigned — ML; depends on task 5 |
-| 7 | Behavior-cloning baseline and held-out evaluation against scripted expert | Unassigned — ML; depends on task 6 |
+| 1 | Validate collision surfaces and low-friction behavior; calibrate when robot access exists | Robotics, unassigned |
+| 2 | Add failure-aware stage transitions and freeze observation/action timing, units, and frames | Robotics/ML, unassigned |
+| 3 | Generate successful contact demonstrations with pose/noise variation; split by episode | ML, depends on 1–2 |
+| 4 | Train behavior cloning and evaluate against the scripted expert on held-out scenes | ML, depends on 3 |
+| Parallel | Freeze voxel/placement schemas; supported two-layer examples and fake executor | Compiler, unassigned |
+| Parallel | Confirm robot API, feedback, access, fixtures, and calibration procedure | Hardware, unassigned |
 
-**Next robotics action:** add a one-cube contact scene using the documented
-geometric candidate and validate finger collision proxies, table clearance, and
-a held-lift success signal. Carry out the physical calibration procedure when
-robot access is available. Assume no robot access until confirmed: the scripted
-simulation expert is the default demonstration source. Do not train on the
-current artificial attachment and label it a learned physical grasp.
+**Next robotics action:** improve the expert's failure handling and resolve the
+lower-friction case while keeping metrics unchanged. Do not train on perfect-state
+diagnostic traces unchanged or call the old idealized replay a physical grasp.
+Assume no robot access until confirmed; hardware work need not block simulation.
 
-## Reproduction and verification
+## Collaboration
 
-Use the repository-root setup commands in [README](../README.md).
+Follow [CONTRIBUTING.md](../CONTRIBUTING.md) and [BUILD_PLAN.md](BUILD_PLAN.md).
+Fetch before integration, use focused feature commits, push working milestones,
+and update this handoff before stopping. Source branches are retained. Configured
+GPG signing was previously locked, so agent commits have used per-command unsigned
+commits without changing user settings. GitHub pushes now work.
 
-```sh
-.venv/bin/python -m unittest discover -s sim -p 'test_*.py'
-.venv/bin/python sim/simulate_assembly.py --check
-.venv/bin/python sim/simulate_assembly.py --save /tmp/legobot.rrd
-```
+Historical baseline failures and review findings are retained in
+[REVIEW_2026-09-12.md](REVIEW_2026-09-12.md) and `contact_baseline_results.json`;
+this handoff describes the current state.
 
-Baseline checks: five tests cover joint limits/orientation, final position within
-1 mm, attachment/stationary released cubes, finger sequencing, and unreachable
-IK rejection. Default sequence generates 396 frames. Headless replay contains
-54 links and 50 meshes. These are numerical results, not physical success rates.
+## Fresh WSL setup and local main integration (2026-09-12)
 
-The imported `sim/` was checked using the existing Python 3.13 environment with
-Rerun 0.37.2: all five tests, `--check`, and headless recording passed after
-relocation. A fresh-environment install has not yet been exercised. The viewer
-default URDF path was corrected to resolve the included model.
+Merged `origin/feat/contact-grasp` through 9ec4dea without conflicts; source
+branches retained. Created checkout-local `.venv` with `uv venv --python 3.13 .venv`
+and `uv pip install --python .venv/bin/python -r requirements-physics.txt`.
+Python 3.13.14, MuJoCo 3.13.0, Rerun 0.37.2, NumPy 2.5.3.
 
-Bootstrap commits are unsigned: the configured GPG database was locked and timed
-out. Signing was disabled per command only; user Git settings were not changed.
+Initial Windows clone converted URDF line endings to CRLF, triggering the asset
+hash guard. Restored exact committed LF bytes; no model, calibration, collision
+assets, or acceptance thresholds changed.
 
-## Handoff protocol
+Fresh-environment verification (all commands use `.venv/bin/python`):
+- `-m unittest discover -s sim -p 'test_*.py'`: all 20 tests pass.
+- `sim/simulate_assembly.py --check`: 396 poses validated.
+- `sim/contact_grasp.py --output outputs/contact --save outputs/contact.rrd`:
+  full success, 0.752 mm placement error, full hold contact, no solver warnings.
+- `sim/simulate_assembly.py --save outputs/assembly.rrd`: completed, 54 links/50 meshes.
+- `sim/evaluate_contact.py --output outputs/contact-evaluation.json`: five nominal
+  translations, pads, and heavier cube pass. Open fingers, zero sliding friction,
+  zero spin friction, coarse hulls, and lower friction remain failures. Lower
+  friction gives 3.262 mm error and heavier cube 0.834 mm here; numeric values
+  differ slightly from the checked-in report but all pass/fail outcomes agree.
 
-Before stopping, update this file with the current milestone, changed behavior,
-checks actually run, outstanding failures, and the next concrete action. Commit
-and push working milestones. For incomplete experiments, identify the branch and
-how to reproduce the failure. Do not mark a task complete just because scaffolding
-exists. See [CONTRIBUTING](../CONTRIBUTING.md).
+Generated recordings/traces/results remain ignored under `outputs/`. Open with
+`.venv/bin/rerun outputs/contact.rrd outputs/assembly.rrd`; use `physics` or
+`simulation` timeline respectively and press Play. These are scripted simulation
+results under provisional physics assumptions, not hardware or ML validation.
+Next: failure-aware expert stages and low-friction/contact-proxy validation on a
+new feature branch, before collecting training demonstrations.
 
-## Open questions
-
-- Teammate owners and branches for compiler, robotics/ML, and workstation work.
-- Robot control API, control frequency, feedback and grasp verification signals.
-- Real jaw calibration, magnetic behavior, table pose, and layered cube pitch.
-- Available work hours, robot access, and organizer rules on pre-event work.
-
-## Latest verification and sync
-
-The user manually pushed bootstrap commits; `git fetch origin` succeeded before
-this work and local `main` matched `origin/main`. The old sync blocker is resolved.
-
-This milestone adds triangle-clipped finger-envelope measurements, a JSON report,
-a width-matching geometric candidate, and a physical calibration procedure.
-All 11 tests pass (5 existing + 6 geometry tests), and the unchanged assembly
-still validates 396 frames. Commands were run with the existing parent Python
-3.13/Rerun environment. No physical grasp is claimed and default grasp settings
-were deliberately left provisional pending contact validation.
-
-The candidate is 0.153774 rad with a +1.101 mm local Y centre correction. At the
-configured 0.19 rad angle the cube has clearance on both sides. Do not generate
-successful physical-grasp labels from the existing idealized attachment.
-
-## Branch integration review
-
-Reviewed and integrated `feat/gripper-calibration` (3667218) and
-`docs/offline-grasp-primitive` (ef55393). Their overlapping handoff edits were
-combined. The offline primitive is a plan, not implemented functionality.
-No changes were made to the assembly configuration during this merge.
-
-The proposed `grasp_depth_from_top = 1/3` targets a contact reference 4.23 mm
-above cube centre. A reference height is not a measured pad extent. Raising the
-tool may increase nominal table clearance but requires a new depth-dependent
-mesh/contact check; do not claim it guarantees clearance or a stable grasp.
-For a downward tool and fixed local contact reference, raising the tool by `h/6`
-moves the cube centre by **+h/6 in tool-local Z**, not minus. The existing
-`tool_grasp_point_m` means cube centre, so do not silently reinterpret that field
-as a pad/contact reference when implementing this feature.
-
-Next integration milestone: a physically evaluated one-cube contact scene plus
-the configurable top-down expert. Keep hardware calibration and learned-policy
-training explicitly pending. Source branches are retained for team traceability.
-
-Merge verification: all 11 tests passed; the default assembly validated 396 frames;
-headless recording completed (54 links, 50 meshes); a freshly generated geometry
-report matched the checked-in JSON exactly. No hardware or ML validation ran.
+Remote publication is pending: automatic approval review requires explicit user
+approval for pushing this merge directly to shared `main`.

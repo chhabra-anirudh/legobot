@@ -1,0 +1,30 @@
+{
+  "coacd_version": "1.0.14",
+  "parameters": {
+    "threshold": 0.0005,
+    "real_metric": true,
+    "seed": 0,
+    "preprocess_mode": "auto",
+    "resolution": 2000,
+    "mcts_iterations": 100,
+    "mcts_nodes": 20,
+    "mcts_max_depth": 3
+  },
+  "fingers": [
+    {
+      "joint": "left_left_gripper",
+      "source_mesh": "Left_Finger__Left_Finger_Mirrored.stl",
+      "source_sha256": "0671e8de515971ab0c9d53e9ee19bcc99f7aa30ea7536de49b44b8732097169f",
+      "parts": 253,
+      "asset_sha256": "44a845063c8a7a6dbc94290ee3c711e6932d6a2173bf41d26ea8e158a9435898"
+    },
+    {
+      "joint": "left_right_gripper",
+      "source_mesh": "Right_Finger__Right_Finger_Mirrored.stl",
+      "source_sha256": "f56500bd05ab0c03b9039ccd5c0d6629d6da5cc67c34734ca94b1d33611453f4",
+      "parts": 283,
+      "asset_sha256": "21dc3217ead6a1f5bd22bb94e1435a3c695a26ac1247a75184fc17d5cdb0145e"
+    }
+  ],
+  "urdf_sha256": "4ea3652f2a19141952f93eb1de162d36c95aa851ec59bb942a3dcebcdd3a7d57"
+}
