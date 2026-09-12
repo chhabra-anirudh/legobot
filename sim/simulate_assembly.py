@@ -11,6 +11,7 @@ import sys
 
 import numpy as np
 import rerun as rr
+from cube_colors import COLORS, rgb
 from visualize_urdf import parse_urdf, joint_transform, log_robot
 
 HERE = Path(__file__).resolve().parent
@@ -86,6 +87,11 @@ def load_config(path):
             raise ValueError(f'{key} must be within URDF gripper limits')
     if c['gripper_open_rad'] <= c['gripper_grasp_rad']:
         raise ValueError('open angle must exceed grasp angle for this gripper')
+    c.setdefault('block_colors', [list(COLORS)[i % len(COLORS)] for i in range(len(c['supply_xy_m']))])
+    if len(c['block_colors']) != len(c['supply_xy_m']):
+        raise ValueError('one block color is required per supply position')
+    for color in c['block_colors']:
+        rgb(color)
     return c
 
 
@@ -167,8 +173,8 @@ def render(c, arm, frames, save):
         rr.log('gripper/angle_rad', rr.Scalars(grip))
         rr.log('workspace/blocks', rr.Boxes3D(centers=blocks,
                half_sizes=np.tile(c['block_size_m']/2, (len(blocks), 1)),
-               colors=[[240, 110, 70] if i == held else [75, 155, 230] for i in range(len(blocks))],
-               labels=[f'Block {i+1}' for i in range(len(blocks))]))
+               colors=[rgb(color) for color in c['block_colors']],
+               labels=[f'{c["block_colors"][i]} {i+1}' + (' (held)' if i == held else '') for i in range(len(blocks))]))
         rr.log('status', rr.TextLog(label))
     rr.get_global_data_recording().flush()
 

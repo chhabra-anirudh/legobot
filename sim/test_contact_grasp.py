@@ -49,15 +49,31 @@ class ContactTests(unittest.TestCase):
     def test_full_success_requires_placement_threshold(self):
         self.assertEqual(self.result['success'], self.result['hold_success'] and
                          not self.result['finger_table_collision'] and
+                         self.result['max_lift_hold_slip_m'] < .002 and
                          self.result['placement_error_m'] < .003 and
                          self.result['final_tilt_rad'] < np.deg2rad(5) and
                          self.result['final_speed_m_s'] < .01)
 
-    def test_without_spin_friction_release_drift_is_detected(self):
-        result, _ = run_episode(torsional_friction=0)
-        self.assertTrue(result['hold_success'])
+    def test_old_off_center_pose_is_rejected(self):
+        result, _ = run_episode(depth=1/3, grasp_x=0, torsional_friction=0, geometry="decomposed")
         self.assertFalse(result['success'])
-        self.assertGreater(result['placement_error_m'], .003)
+
+    def test_centered_grasp_works_without_spin_friction(self):
+        result, _ = run_episode(torsional_friction=0)
+        self.assertTrue(result['success'])
+
+    def test_centered_width_and_measured_grip_quality(self):
+        close_frame = [f for f in self.frames if f['stage'] == 'close'][-1]
+        for point in close_frame['contact_centers_cube_m']:
+            self.assertLess(abs(point[0]), .002)
+            self.assertLess(abs(point[2]), .003)
+        self.assertGreater(min(self.result['min_hold_normal_forces_n']), .5)
+        self.assertLess(self.result['max_lift_hold_slip_m'], .002)
+        self.assertTrue(all(f['cube_color'] == 'blue' for f in self.frames))
+
+    def test_lower_friction_grasp(self):
+        result, _ = run_episode(friction=.5)
+        self.assertTrue(result['success'])
 
     def test_warning_callback_restored_after_failure(self):
         previous = mujoco.get_mju_user_warning()

@@ -11,8 +11,9 @@ One arm and a finger gripper; imitation learning for pickup is planned.
 A kinematic simulation stacks three cubes using the supplied robot URDF, with
 joint-limited inverse kinematics and animated finger joints. Grasp attachment is
 idealized. An isolated [contact experiment](docs/CONTACT_SIM.md) now tests a free cube under
-gravity using the finger joints. The refined collision model passes nominal lift/hold/return checks under provisional
-physics assumptions; lower-friction robustness and real calibration remain unresolved. Full-arm collision
+gravity using the finger joints. The [centered foam-pad model](docs/CENTERED_GRASP.md) passes nominal lift/hold/return
+checks with measured force/slip gates and configurable colors. Foam parameters
+remain provisional; heavier-load slip and real calibration are unresolved. Full-arm collision
 checking, learned pickup, vision, the voxel compiler, and hardware execution are
 not implemented yet.
 

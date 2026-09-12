@@ -1,5 +1,9 @@
 # Isolated gripper contact simulation
 
+**Current default:** see [centered foam-pad grasp](CENTERED_GRASP.md). It supersedes
+the older default and metric descriptions below. The rigid/decomposed baselines
+are retained for comparison.
+
 ## Run
 
 From the repository root (Python 3.10+):

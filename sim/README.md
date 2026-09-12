@@ -76,8 +76,7 @@ From this directory, using the existing viewer environment:
 
 If the environment is missing, run `./view_urdf.sh --list-joints --urdf
 chopped_urdf_v2/urdf/chopped_urdf_v2.urdf` once to provision it. In Rerun, select
-the `simulation` timeline and press Play. Orange identifies the carried block;
-blue identifies released blocks. The status log names each operation. The demo
+the `simulation` timeline and press Play. Cubes retain their configured colors; labels identify the held block. The status log names each operation. The demo
 starts at an already solved approach pose, not the robot's real startup pose.
 Playback timing is illustrative and does not enforce motor speed/acceleration limits.
 

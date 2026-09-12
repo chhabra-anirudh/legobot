@@ -33,5 +33,10 @@
   ],
   "gripper_open_rad": 0.35,
   "gripper_grasp_rad": 0.19,
-  "gripper_motion_seconds": 0.6
+  "gripper_motion_seconds": 0.6,
+  "block_colors": [
+    "red",
+    "green",
+    "blue"
+  ]
 }

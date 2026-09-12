@@ -1,7 +1,7 @@
 # Live handoff — start here
 
 Updated 2026-09-12. Active work: Codex, robotics/simulation,
-integration into **`main`**. Other individual owners are unassigned.
+branch **`fix/centered-grasp-colors`**, based on main at 8394727. Other individual owners are unassigned.
 
 ## Current state
 
@@ -25,7 +25,7 @@ contact physics and its nominal release fix are now integrated into local `main`
 
 ## Latest verification and remaining limits
 
-All **20 tests pass** with physics dependencies installed. The original kinematic
+All **26 tests pass** with physics dependencies installed. The original kinematic
 plan still validates 396 frames. Refined physics recording generated successfully.
 
 [Refined development checks](contact_refined_results.json): five translated nominal
@@ -73,8 +73,8 @@ normal execution. See [CONTACT_SIM.md](CONTACT_SIM.md) and
 | Parallel | Freeze voxel/placement schemas; supported two-layer examples and fake executor | Compiler, unassigned |
 | Parallel | Confirm robot API, feedback, access, fixtures, and calibration procedure | Hardware, unassigned |
 
-**Next robotics action:** improve the expert's failure handling and resolve the
-lower-friction case while keeping metrics unchanged. Do not train on perfect-state
+**Next robotics action:** validate real foam geometry/compliance and heavier-cube
+slip, then add failure-aware transitions. Do not train on perfect-state
 diagnostic traces unchanged or call the old idealized replay a physical grasp.
 Assume no robot access until confirmed; hardware work need not block simulation.
 
@@ -128,3 +128,26 @@ this graphics driver. Browser serving starts successfully with:
 `.venv/bin/rerun --serve-web --bind 127.0.0.1 --web-viewer-port 9090 outputs/contact.rrd outputs/assembly.rrd`.
 Open `http://127.0.0.1:9090?url=rerun%2Bhttp%3A%2F%2Flocalhost%3A9876%2Fproxy`.
 Both recordings loaded into the local server; browser rendering is not verified.
+
+## Latest override: user-confirmed soft fingers and centered colored replay
+
+See [CENTERED_GRASP.md](CENTERED_GRASP.md). The user confirmed foam-and-mesh pads.
+Default geometry is now `foam_pads` over the unchanged decomposed finger geometry;
+pad dimensions/compliance remain provisional in `sim/foam_pad_config.json`.
+The corrected EEF targets half cube height and X=-18 mm relative to cube centre.
+Actual force centroids are near opposing face centres; torque limits are unchanged.
+
+Schema v2 adds per-finger normal force, contact centroids, stable cube colors,
+and a stricter grip gate (>=0.5 N each and <2 mm maximum relative motion through
+lift/hold). Nominal foam runs give ~1.54 N, 1.89 mm motion, ~0.043 mm final error.
+Lower friction 0.5 now passes. The 40 g foam case fails slip and stays labeled a
+failure; do not substitute the old bare-finger result. All 26 tests pass. Both
+updated colored/physics recordings generated. Historical reports above are not
+current-default results; use `contact_foam_results.json`.
+
+Run: `.venv/bin/python sim/contact_grasp.py --color blue --show-contacts --save
+outputs/foam-centered.rrd`. Three-cube animation uses red/green/blue from config.
+New recordings are required to see the changes. `.gitattributes` now preserves
+URDF LF bytes for Windows checkouts, addressing the teammate's WSL hash issue.
+This branch has not been merged into main. Next: calibrate foam and heavy-load
+slip, then failure-aware control and demonstration contracts.

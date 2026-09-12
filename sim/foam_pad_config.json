@@ -1,0 +1,12 @@
+{
+  "status": "provisional foam-and-mesh proxy; dimensions and compliance are not measured",
+  "width_m": 0.02,
+  "height_m": 0.012,
+  "thickness_m": 0.004,
+  "reference_angle_rad": 0.18,
+  "center_x_eef_m": 0.018,
+  "center_z_eef_m": 0.004,
+  "inner_half_gap_m": 0.0127,
+  "contact_time_constant_s": 0.015,
+  "pad_mass_kg": 0.003
+}

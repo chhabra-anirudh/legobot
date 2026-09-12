@@ -5,9 +5,11 @@ from pathlib import Path
 from contact_grasp import run_episode
 
 CASES = [(f'translation_{seed}', {'seed': seed}) for seed in range(5)] + [
+    ('old_off_center_pose', {'depth':1/3, 'grasp_x':0, 'geometry':'decomposed'}),
     ('open_control', {'close': False}),
     ('zero_sliding_friction', {'friction': 0}),
     ('zero_spin_friction', {'torsional_friction': 0}),
+    ('bare_decomposed_control', {'geometry':'decomposed'}),
     ('coarse_hull_control', {'geometry': 'mesh_hulls'}),
     ('pad_control', {'geometry': 'pads'}),
     ('lower_friction', {'friction': .5}),
