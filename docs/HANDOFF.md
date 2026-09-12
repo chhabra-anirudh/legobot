@@ -27,6 +27,17 @@ gravity or contact and remain axis-aligned. There are no collision checks,
 magnetic dynamics, hardware commands, learned policy, camera integration, or voxel
 compiler. Playback time does not enforce physical actuator speed/acceleration.
 
+The current sequence descends onto the cube from above but aligns the tool grasp
+point with the cube *centre*. The plan now specifies gripping one third of the
+cube height below the top face (`z_centre + h/6`, 4.23 mm for 25.4 mm cubes);
+that offset is not yet implemented in `sim/assembly_config.json`.
+
+Unmerged teammate work exists on `origin/feat/gripper-calibration` (mesh-envelope
+gripper report, calibration procedure, geometry JSON). It also edits this file, so
+expect a conflict on merge; preserve both sets of changes. Its fingertip-to-table
+clearance figure (~1.55 mm at the current cube-centre probe depth) is the evidence
+behind the top-third grasp; its probe depth should be re-run at the new depth.
+
 Cube size (25.4 mm) and finger-gripper hardware were confirmed by the user.
 Table positions, grasp point, and 0.35/0.19 rad open/grasp angles are provisional.
 The teammate plan's exact jaw-width figures have not been independently validated.
@@ -40,12 +51,16 @@ The solver starts at an approach pose, not a physical startup/home configuration
 | 2 | Minimal contact simulator: cube can be lifted and held under gravity without idealized attachment | Unassigned — Robotics/ML |
 | 3 | Freeze structure/placement interfaces; validate supported two-layer examples against fake executor | Unassigned — Compiler |
 | 4 | Identify robot API, feedback, camera, fixtures, actual access time; measure grasp repeatability | Unassigned — Hardware/integration |
-| 5 | Record successful expert episodes with observation/action contract and held-out split | Unassigned — ML; depends on task 2 |
-| 6 | Behavior-cloning baseline and held-out evaluation against scripted expert | Unassigned — ML; depends on task 5 |
+| 5 | Preconfigured top-down grasp primitive as the default no-robot-access expert: hover over the cube, vertical descent to one third of the cube height below the top face, close, vertical lift | Unassigned — Robotics/ML; depends on task 2 |
+| 6 | Record successful expert episodes with observation/action contract and held-out split | Unassigned — ML; depends on task 5 |
+| 7 | Behavior-cloning baseline and held-out evaluation against scripted expert | Unassigned — ML; depends on task 6 |
 
 **Next robotics action:** inspect the actual finger contact zone and establish a
-calibration procedure. Then add a one-cube contact scene. Do not train on the
-current artificial attachment and label it a learned physical grasp.
+calibration procedure — including whether the contact patch fits inside the
+8.47 mm top-third grasp band. Then add a one-cube contact scene and the
+preconfigured top-down grasp primitive. Assume no robot access by default: the
+imitation-learning workstream starts from that scripted simulated expert. Do not
+train on the current artificial attachment and label it a learned physical grasp.
 
 ## Reproduction and verification
 

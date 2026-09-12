@@ -150,8 +150,10 @@ first validate conversion, inertias, actuators, and collision proxies in a minim
 one-cube scene. Preserve the robot geometry needed to check nearby collisions;
 keep Rerun for inspection rather than treating it as a physics engine.
 
-Use the scripted approach–close–lift controller as the expert. Remove idealized
-attachment when judging grasp success. Log observations, commands, episode
+Use the scripted approach–close–lift controller as the expert — by default the
+preconfigured top-down primitive specified in work package 4, so demonstration
+collection does not block on robot access. Remove idealized attachment when
+judging grasp success. Log observations, commands, episode
 parameters, contact information available in simulation, and actual outcomes.
 Vary cube position/yaw within a bounded pickup region. Split by episode and scene
 parameters before training; neighboring frames from one trajectory must not leak
@@ -164,6 +166,57 @@ the deployed policy's training observations, and simulator-only contacts may be
 used for labeling but not as unavailable policy inputs.
 
 ### 4. First learned policy: behavior cloning
+
+#### Default when there is no robot access: preconfigured top-down grasp
+
+Assume no robot access unless hardware time is confirmed. In that default case, do
+not wait for the robot to start the imitation-learning workstream: generate the
+demonstrations from a preconfigured scripted grasp primitive in simulation, and
+label every resulting artifact as simulated. Switch the expert to teleoperated or
+hand-guided demonstrations only once hardware is actually available.
+
+The preconfigured primitive approaches from directly above and grips the top of
+the cube. Defined in `root`, with cube height `h` (25.4 mm) and the tool z-axis
+pointing down:
+
+1. **Hover over the block.** Tool grasp point above the cube centre in XY, at
+   `z_top + clearance` (0.04 m default). Choose tool yaw so the finger closing
+   axis is perpendicular to the cube faces it will contact; keep the approach
+   direction fixed while searching yaw.
+2. **Descend straight down.** Move along −z only, until the tool grasp point
+   reaches the grasp band one third of the cube height below the top face:
+   `z_grasp = z_top − h/3 = z_centre + h/6`. For 25.4 mm cubes that is 8.47 mm
+   below the top face and 4.23 mm above the cube centre. Store this as a config
+   fraction (`grasp_depth_from_top = 1/3`), not a hardcoded offset; the current
+   simulation aligns the tool grasp point with the cube centre and must be
+   raised by `h/6` to match.
+3. **Close fingers** to the grasp angle, then check for a held cube instead of
+   treating the commanded close as success.
+4. **Lift straight up** along +z to travel height before any lateral motion.
+   Place and retreat mirror this: descend vertically, release, open, lift
+   vertically.
+
+Gripping the top third keeps the fingers clear of the table and of the layer
+below, and leaves the lower two thirds of the cube free for the magnetic joint to
+the cube underneath. The mesh-envelope report on the `feat/gripper-calibration`
+branch supports the clearance argument: probing at the present cube-centre depth,
+nominal fingertip-to-table clearance is only about 1.55 mm near the width-matching
+candidate angle, so raising the grasp point by `h/6` buys roughly 4.2 mm more.
+Re-run that report with the cube centre moved to the top-third depth rather than
+assuming the gap scales; measurements there depend on probe depth.
+
+That report does not settle the remaining question: it is an envelope clipped to
+the cube slab, so it does not give the vertical extent of the finger pads. The
+top-third band assumes the contact patch fits inside 8.47 mm. If the measured
+patch is taller, the band centre must be lowered and the clearance claim
+re-derived from work package 1. These numbers are provisional geometry targets
+until a physical measurement exists.
+
+Vertical approach, grasp depth, hover clearance, and yaw remain part of the
+recorded episode parameters so a later hardware expert can be compared against
+this scripted one on the same contract.
+
+#### Policy
 
 Start with a small supervised policy using robot state, relative cube pose,
 observation age/uncertainty, and optionally short history. Output bounded Cartesian
@@ -236,7 +289,10 @@ an authorization or a verified rule set.
 1. Verify gripper contact geometry and replace provisional jaw settings with a
    documented calibration model.
 2. Establish a minimal one-cube contact scene and a grasp-success measurement.
-3. Add observation/action recording to the scripted expert.
+3. Implement the preconfigured top-down grasp primitive (hover above the cube,
+   vertical descent to one third of the cube height below the top face, close,
+   vertical lift) as the default no-robot-access expert, and add observation/action
+   recording to it.
 4. In the compiler workstream, agree on the structure and placement schemas and
    implement supported two-layer examples against a fake executor.
 5. Train the first behavior-cloning model only once demonstrations reflect a
