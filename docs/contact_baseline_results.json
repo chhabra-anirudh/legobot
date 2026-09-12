@@ -1,0 +1,143 @@
+{
+  "note": "Development checks only; exact cube XY is supplied to expert. Not held-out ML or hardware evaluation.",
+  "runs": [
+    {
+      "schema_version": 1,
+      "frame": "experiment_table",
+      "mujoco_version": "3.13.0",
+      "numerically_stable": true,
+      "seed": 0,
+      "mode": "isolated_gripper_contact_sim",
+      "close_enabled": true,
+      "geometry": "mesh_hulls",
+      "friction": 0.8,
+      "mass_kg": 0.03,
+      "grasp_depth_from_top": 0.3333333333333333,
+      "hold_success": true,
+      "hold_contact_fraction": 1.0,
+      "finger_table_collision": false,
+      "placement_error_m": 0.0035892106508514676,
+      "final_cube_position_m": [
+        0.004360569274636135,
+        -0.0007833509923606785,
+        0.012657398275963008
+      ],
+      "success": false
+    },
+    {
+      "schema_version": 1,
+      "frame": "experiment_table",
+      "mujoco_version": "3.13.0",
+      "numerically_stable": true,
+      "seed": 1,
+      "mode": "isolated_gripper_contact_sim",
+      "close_enabled": true,
+      "geometry": "mesh_hulls",
+      "friction": 0.8,
+      "mass_kg": 0.03,
+      "grasp_depth_from_top": 0.3333333333333333,
+      "hold_success": true,
+      "hold_contact_fraction": 1.0,
+      "finger_table_collision": false,
+      "placement_error_m": 0.0035892106490353517,
+      "final_cube_position_m": [
+        0.003609728896384494,
+        0.0033007109070508516,
+        0.012657398275963008
+      ],
+      "success": false
+    },
+    {
+      "schema_version": 1,
+      "frame": "experiment_table",
+      "mujoco_version": "3.13.0",
+      "numerically_stable": true,
+      "seed": 2,
+      "mode": "isolated_gripper_contact_sim",
+      "close_enabled": true,
+      "geometry": "mesh_hulls",
+      "friction": 0.8,
+      "mass_kg": 0.03,
+      "grasp_depth_from_top": 0.3333333333333333,
+      "hold_success": true,
+      "hold_contact_fraction": 1.0,
+      "finger_table_collision": false,
+      "placement_error_m": 0.0035892106515108355,
+      "final_cube_position_m": [
+        0.002108471956530559,
+        -0.0006111244124379638,
+        0.012657398275963027
+      ],
+      "success": false
+    },
+    {
+      "schema_version": 1,
+      "frame": "experiment_table",
+      "mujoco_version": "3.13.0",
+      "numerically_stable": true,
+      "seed": 0,
+      "mode": "isolated_gripper_contact_sim",
+      "close_enabled": false,
+      "geometry": "mesh_hulls",
+      "friction": 0.8,
+      "mass_kg": 0.03,
+      "grasp_depth_from_top": 0.3333333333333333,
+      "hold_success": false,
+      "hold_contact_fraction": 0.0,
+      "finger_table_collision": false,
+      "placement_error_m": 4.260172403893059e-05,
+      "final_cube_position_m": [
+        0.0008217698624252105,
+        -0.0013812800292993914,
+        0.012657398275963013
+      ],
+      "success": false
+    },
+    {
+      "schema_version": 1,
+      "frame": "experiment_table",
+      "mujoco_version": "3.13.0",
+      "numerically_stable": true,
+      "seed": 0,
+      "mode": "isolated_gripper_contact_sim",
+      "close_enabled": true,
+      "geometry": "mesh_hulls",
+      "friction": 0,
+      "mass_kg": 0.03,
+      "grasp_depth_from_top": 0.3333333333333333,
+      "hold_success": false,
+      "hold_contact_fraction": 0.0,
+      "finger_table_collision": false,
+      "placement_error_m": 0.40756013974907407,
+      "final_cube_position_m": [
+        -0.40661918155154453,
+        -0.011237069746799522,
+        0.01265742105914818
+      ],
+      "success": false
+    },
+    {
+      "schema_version": 1,
+      "frame": "experiment_table",
+      "mujoco_version": "3.13.0",
+      "numerically_stable": true,
+      "seed": 0,
+      "mode": "isolated_gripper_contact_sim",
+      "close_enabled": true,
+      "geometry": "pads",
+      "friction": 0.8,
+      "mass_kg": 0.03,
+      "grasp_depth_from_top": 0.3333333333333333,
+      "hold_success": true,
+      "hold_contact_fraction": 1.0,
+      "finger_table_collision": false,
+      "placement_error_m": 0.0011008245257233134,
+      "final_cube_position_m": [
+        0.0008217648831009022,
+        -0.0002812798403642536,
+        0.012657398275963025
+      ],
+      "success": true
+    }
+  ]
+}

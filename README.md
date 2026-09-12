@@ -10,8 +10,11 @@ One arm and a finger gripper; imitation learning for pickup is planned.
 
 A kinematic simulation stacks three cubes using the supplied robot URDF, with
 joint-limited inverse kinematics and animated finger joints. Grasp attachment is
-idealized. Contact physics, collision checking, learned pickup, vision, the voxel
-compiler, and hardware execution are not implemented yet.
+idealized. An isolated [contact experiment](docs/CONTACT_SIM.md) now tests a free cube under
+gravity using the finger joints. Mesh-based lift/hold works under provisional
+physics assumptions; return/release accuracy remains unresolved. Full-arm collision
+checking, learned pickup, vision, the voxel compiler, and hardware execution are
+not implemented yet.
 
 ## Run the baseline
 

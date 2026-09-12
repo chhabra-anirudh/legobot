@@ -5,7 +5,7 @@ workstream. Individual teammate assignments are not yet confirmed.
 
 ## Current milestone
 
-Integrated gripper geometry tooling and offline expert plan on `main`. The shared source of
+Isolated contact-grasp experiment on `feat/contact-grasp` (Codex robotics workstream). The shared source of
 truth is this repository, not the earlier `battle_of_schools_hackathon` files.
 See [BUILD_PLAN.md](BUILD_PLAN.md) for the combined hackathon and ML proposal.
 
@@ -22,7 +22,7 @@ See [BUILD_PLAN.md](BUILD_PLAN.md) for the combined hackathon and ML proposal.
 
 ### Known limits
 
-This is kinematics only. Attachment/release is idealized; cubes do not experience
+The original three-cube replay is kinematics only. Attachment/release is idealized; cubes do not experience
 gravity or contact and remain axis-aligned. There are no collision checks,
 magnetic dynamics, hardware commands, learned policy, camera integration, or voxel
 compiler. Playback time does not enforce physical actuator speed/acceleration.
@@ -39,10 +39,10 @@ The solver starts at an approach pose, not a physical startup/home configuration
 | Priority | Task and completion criterion | Owner / branch |
 | --- | --- | --- |
 | 1 | Verify finger contact geometry; document jaw width vs angle and tool grasp point | Mesh probe merged; physical measurements pending / owner unassigned |
-| 2 | Minimal contact simulator: cube can be lifted and held under gravity without idealized attachment | Unassigned — Robotics/ML |
+| 2 | Isolated contact lift/hold implemented; refine collision proxies and fix release placement | Codex — `feat/contact-grasp`; full-arm integration pending |
 | 3 | Freeze structure/placement interfaces; validate supported two-layer examples against fake executor | Unassigned — Compiler |
 | 4 | Identify robot API, feedback, camera, fixtures, actual access time; measure grasp repeatability | Unassigned — Hardware/integration |
-| 5 | Implement simulated top-down expert with configurable grasp depth; verify contacts before labeling success | Unassigned — Robotics/ML; depends on task 2 |
+| 5 | Diagnostic top-down expert implemented; add failure-aware transitions before demonstration collection | Codex — `feat/contact-grasp` |
 | 6 | Record successful expert episodes with observation/action contract and held-out split | Unassigned — ML; depends on task 5 |
 | 7 | Behavior-cloning baseline and held-out evaluation against scripted expert | Unassigned — ML; depends on task 6 |
 
@@ -111,7 +111,8 @@ successful physical-grasp labels from the existing idealized attachment.
 
 Reviewed and integrated `feat/gripper-calibration` (3667218) and
 `docs/offline-grasp-primitive` (ef55393). Their overlapping handoff edits were
-combined. The offline primitive is a plan, not implemented functionality.
+combined. At merge time the offline primitive was a plan; the current contact branch implements
+an isolated diagnostic version (see latest checkpoint below).
 No changes were made to the assembly configuration during this merge.
 
 The proposed `grasp_depth_from_top = 1/3` targets a contact reference 4.23 mm
@@ -130,3 +131,21 @@ training explicitly pending. Source branches are retained for team traceability.
 Merge verification: all 11 tests passed; the default assembly validated 396 frames;
 headless recording completed (54 links, 50 meshes); a freshly generated geometry
 report matched the checked-in JSON exactly. No hardware or ML validation ran.
+
+## Latest checkpoint: contact physics
+
+See [CONTACT_SIM.md](CONTACT_SIM.md), [review findings](REVIEW_2026-09-12.md), and
+[development results](contact_baseline_results.json). The isolated URDF gripper
+now lifts a free cube and maintains two force-bearing contacts throughout a
+one-second hold. No attachment acts on the cube. Mesh-hull placement still fails
+the 3 mm final error gate; the simpler box-pad control passes. Open-finger and
+zero-friction controls fail hold as expected. Do not claim full pick/place readiness.
+
+All 18 tests pass in the new repository-local environment, installed with
+`requirements-physics.txt`; both physics geometry modes can save Rerun recordings.
+The original kinematic plan still validates 396 frames. Physics traces go to
+ignored `outputs/`, not source control. Branch: `feat/contact-grasp`.
+
+**Next action overrides older sequencing above:** validate/refine finger contact
+proxies and fix lowering/release drift, then add failure-aware expert transitions
+and a frozen demonstration contract. No learned model has been trained.
