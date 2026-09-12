@@ -1,0 +1,247 @@
+# Prompt-to-structure robot: merged hackathon plan
+
+This merges the supplied **PixelForge 3D: Full Build Plan** with the existing
+BracketBot simulation and our imitation-learning discussion. The source document
+is a proposal; its hardware measurements, event details, deadlines, and shopping
+claims are not independently verified here. Planning assumption: three teammates
+and 24 working hours. Adjust the schedule to actual robot access and event rules.
+
+## What we are building
+
+A user describes a small structure. An LLM proposes a voxel model. A deterministic
+compiler checks the model against inventory, support, workspace, and gripper
+clearance, then produces a placement sequence. The robot builds it with 25.4 mm
+magnetic cubes using one finger gripper.
+
+The learning component is a **pickup policy trained by imitation**. It learns
+small tool movements and gripper actions from demonstrations. It does not decide
+structural validity or send raw motor commands. The existing IK/controller remains
+between the policy and the robot.
+
+Demo promise: prompt → checked preview → physical construction, with a separately
+measured learned-pickup result. If learned pickup is not ready for hardware, show
+its simulation evaluation clearly labeled and use scripted pickup for the live
+build. Do not present scripted actions as learned behavior.
+
+## Scope and success criteria
+
+| Level | Target |
+| --- | --- |
+| First milestone | One cube picked, lifted, held, and placed on the real bot |
+| Minimum live demo | A compiler-approved 4–8 cube structure, two layers, fixed supply poses |
+| ML milestone | Behavior-cloned pickup evaluated on held-out randomized poses in contact simulation |
+| Stretch live demo | Learned pickup on hardware; 15–20 cubes and three layers only after repeatable smaller builds |
+| Deferred | RL fine-tuning, dual arms, image-to-action learning, arbitrary piles, unsupported bridges |
+
+Use towers, stepped structures, and supported letters as initial shapes. An arch
+with an empty space directly below its lintel fails our support rule. A dense
+footprint may also fail finger clearance even when each cube has support.
+Do not promise arbitrary 3D models.
+
+## Current implementation: what is actually working
+
+- The existing URDF is loaded in Rerun, with a left-arm damped-least-squares IK solver.
+- Cubes are exactly 0.0254 m per side according to the user.
+- Three cubes follow a scripted stacking sequence; both fingers animate using the
+  URDF mimic relationship. Five numerical tests pass for the current configuration.
+- Grasp angles, tool grasp point, table, and supply coordinates are provisional.
+- Attachment is idealized. There is no contact, friction, magnetic force,
+  collision checking, motor-rate enforcement, learned policy, CV, or hardware bridge.
+- The 396-frame replay demonstrates kinematics, not physical grasp success.
+
+## Corrections to carry into the merged design
+
+1. **Check rather than “prove physically buildable.”** Discrete rules can establish
+   validity under stated assumptions. They cannot establish real friction,
+   calibration accuracy, magnetic behavior, dynamic stability, or reliable execution.
+   Pitch: “We compile generated structures into robot-specific, checked build plans.”
+2. **Verify the jaw geometry.** The source quotes a 25.4 mm gap at 0.185 rad and
+   roughly 57 mm outer width. Treat these as hypotheses until the measurement
+   cross-section and real finger contacts are checked. Our current 0.19 rad grasp
+   command is an animation parameter, not a force-controlled grasp.
+3. **Specify tool orientation, not just wrist angle.** Search candidate tool yaw
+   values while maintaining the approach direction, then solve the full arm IK.
+   Joint `lj6` is not generally interchangeable with yaw in the root frame.
+   Stay with the left arm already implemented; use `root` for external poses.
+4. **Check approach and withdrawal.** Empty neighboring cells at the destination
+   alone do not establish a clear path for fingers, hand, arm, or carried cube.
+   Check the open-finger retreat too, and check intermediate joint configurations.
+5. **Calibrate pose accuracy against clearance.** A generic “under 10 mm” camera
+   target is not sufficient evidence for a 25.4 mm grasp. Derive tolerated error
+   from measured jaw clearance, cube uncertainty, and approach geometry.
+6. **Treat magnets as an experiment.** Test attraction to the proposed base plate,
+   face compatibility, double-picks, sliding, and release by hand. Do not assume
+   magnetic self-registration or that fixed polarity makes assembly impossible.
+7. **Use simple support first.** Direct support excludes overhangs. A global centre
+   of mass inside a footprint alone is not a stability certificate; check partial
+   builds as well and avoid claiming dynamic stability.
+
+## Architecture and shared interfaces
+
+```text
+prompt → LLM → voxel schema → compiler → placement plan → executor → IK/robot bridge
+                               ↑                          ↓
+                    inventory + calibration       scripted or learned PICK
+                                                          ↑
+                                              calibrated cube observation
+```
+
+One codebase with separate modules is enough. Do not spend the build window
+operating five independently deployed services.
+
+Freeze versioned interfaces first:
+
+- **Structure:** integer voxel coordinates, requested color, nominal cube size,
+  unique structure ID. Reject duplicates, negative layers, nonfinite values,
+  unsupported colors, and size/budget violations.
+- **Calibration:** `T_root_build`, taught supply poses, measured XY pitch and layer
+  height, tool grasp point, arm selection, units, and calibration version.
+- **Placement step:** voxel, assigned color, target tool pose in `root` (position
+  in metres and quaternion in XYZW order), approach/retreat poses, primitive name.
+  Record the yaw candidate as metadata; the executor solves actual joint values.
+- **Cube observation:** `frame=root`, position, orientation, timestamp with a shared
+  clock definition, uncertainty, and confidence. Missing/stale observations are
+  explicit failures, not a pose of zero.
+- **Execution result:** step ID, state, success/failure reason, attempt count,
+  controller mode (`scripted` or `learned`), and elapsed time.
+
+The compiler must use calibrated build coordinates instead of directly treating
+voxel indices as robot coordinates. Keep nominal cube size separate from measured
+stack pitch. Recompile after a geometry or calibration change.
+
+## Work packages and their order
+
+### 1. Physical grasp and control baseline
+
+Identify the robot API, available encoder/gripper/contact feedback, camera setup,
+and emergency stop/reset procedure. Fix the mobile base for this task. Teach a
+small workspace and one separated pickup location; add magazines only if they
+reduce reset effort. Test a single cube before designing a multi-cube feeder.
+
+Measure jaw opening versus angle, finger contact region, tool-to-cube transform,
+and repeatability. Determine what signal verifies a held cube: camera evidence,
+gripper feedback if available, or supervised confirmation during initial tests.
+Do not assume that a commanded close means a successful grasp.
+
+Gate: record 20 scripted pick–lift–hold–place attempts and failure causes. An initial
+18/20 target is a development gate, not sufficient evidence for a reliable long
+build. At independent 90% per-cube success, 20 placements succeed together only
+about 12% of the time. Evaluate complete builds and recovery separately.
+
+### 2. Compiler and executor baseline
+
+Implement schema validation, direct support, connectivity, height/cube budgets,
+and loaded inventory. Search bottom-up placement orders and candidate tool yaws.
+Use conservative finger/hand geometry for the initial clearance filter, then
+validate paths against the robot model where supported. Place time/node limits
+on search. A timeout means “not resolved,” not “physically impossible.”
+
+Reject unsupported geometry with a visible explanation. If offering a repair,
+show the changed preview and rerun every check; deleting one voxel can invalidate
+support or connectivity elsewhere. Cache several fully checked demo structures.
+
+Gate: a valid small structure produces executable steps; a floating voxel and an
+intentionally blocked placement are rejected for the correct reason.
+
+### 3. Contact simulation and demonstration collection
+
+Build a contact simulation from the existing model. MuJoCo is the proposed engine;
+first validate conversion, inertias, actuators, and collision proxies in a minimal
+one-cube scene. Preserve the robot geometry needed to check nearby collisions;
+keep Rerun for inspection rather than treating it as a physics engine.
+
+Use the scripted approach–close–lift controller as the expert. Remove idealized
+attachment when judging grasp success. Log observations, commands, episode
+parameters, contact information available in simulation, and actual outcomes.
+Vary cube position/yaw within a bounded pickup region. Split by episode and scene
+parameters before training; neighboring frames from one trajectory must not leak
+across training and evaluation.
+
+Gate: the expert holds a cube above the table for a defined interval under gravity,
+then places it. Failed expert episodes are identified rather than mislabeled as
+successful demonstrations. Hardware-only sensors must not appear accidentally in
+the deployed policy's training observations, and simulator-only contacts may be
+used for labeling but not as unavailable policy inputs.
+
+### 4. First learned policy: behavior cloning
+
+Start with a small supervised policy using robot state, relative cube pose,
+observation age/uncertainty, and optionally short history. Output bounded Cartesian
+increments and a defined gripper target. Specify frame, control period, units,
+normalization, limits, and episode termination. The controller enforces limits
+and rejects invalid commands independently of the network.
+
+Compare against the scripted expert on identical held-out episode seeds. Report
+pick/hold success, placement error, drops, collisions, timeouts, and completion
+time; do not use training loss as the demo's success metric.
+
+If cloning drifts, add a small correction dataset from the states the policy visits
+(DAgger-style iteration). RL is a stretch only after this works. There is no need
+to complete BC, DAgger, and RL to demonstrate a real learned component.
+
+Gate: choose an explicit evaluation threshold before running the final evaluation;
+record all trials, including failures. Keep the scripted physical fallback.
+
+### 5. Integration and guarded transfer
+
+Calibrate the fixed camera transform if variable-position pickup is needed. For the
+first physical demo, taught fixed supply locations can avoid making CV a blocker.
+Compare real observations with the training contract. Introduce measured ranges
+of pose error, friction, mass, latency, and gains into simulation experiments.
+
+Test the learned primitive with a single separated cube at low speed. Keep the
+compiler and placement executor deterministic. If perception or policy checks
+fail, stop/retry or request reset. Use a taught pickup fallback only when a cube
+is actually present at that taught location; do not continue from an arbitrary
+failed-grasp state as though a cube were held.
+
+Gate: two-layer construction repeated end to end, with logged controller mode.
+
+### 6. Demo freeze and presentation
+
+Show prompt input, the checked preview, one clear rejection example, and physical
+placements. Display whether pickup is learned or scripted. Show held-out ML results
+and disclose whether they are simulated or physical. Record complete-build success
+and runtime, not just successful individual grasps. Keep offline structures and
+a clearly identified backup video. Reduce structure size to fit measured cycle time.
+
+## Team ownership and 24-hour schedule
+
+| Owner | Primary responsibility |
+| --- | --- |
+| A — Robotics/ML | IK/controller, physical grasp baseline, simulator, demonstrations, BC |
+| B — Compiler/UI | Schemas, validation, placement search, executor integration, preview |
+| C — Workstation/integration | Fixtures, measurements, calibration with A, reset, logs, video |
+
+Do not assign camera calibration, LLM, UI, and the entire compiler simultaneously
+to B. C coordinates calibration; A supplies robot-frame measurements. CV is optional
+for the fixed-pickup demo. Confirm each member's skills before final assignment.
+
+| Working hours | Integrated target | Scope decision |
+| --- | --- | --- |
+| 0–2 | Confirm access; freeze interfaces; hand-test cubes/gripper; fake executor | Inventory and hardware facts become measured inputs |
+| 2–6 | One scripted physical pick; basic compiler; minimal contact scene | Fix physical grasp before adding autonomy |
+| 6–10 | Two-cube/two-layer loop; expert data; first BC training if scene works | If contact sim is late, retain physical demo and narrow ML claim |
+| 10–14 | Held-out BC evaluation; clearance planning; small full build | Freeze live scope at two layers if larger builds are unreliable |
+| 14–18 | Optional learned hardware pick; recovery and repeated complete builds | No RL unless all core gates already pass |
+| 18–21 | Feature freeze; measured demo runs; offline fallback | Fix failures only; choose demonstrated build size |
+| 21–24 | Record video, results, architecture slide, and rehearse | Label learned/scripted and sim/real honestly |
+
+These are proposed cutoffs, not instructions from organizers. Confirm event rules
+and permitted pre-event work directly; the source document's assertions are not
+an authorization or a verified rule set.
+
+## Immediate next implementation session
+
+1. Verify gripper contact geometry and replace provisional jaw settings with a
+   documented calibration model.
+2. Establish a minimal one-cube contact scene and a grasp-success measurement.
+3. Add observation/action recording to the scripted expert.
+4. In the compiler workstream, agree on the structure and placement schemas and
+   implement supported two-layer examples against a fake executor.
+5. Train the first behavior-cloning model only once demonstrations reflect a
+   physically successful grasp.
+
+The source document's visibility-aware color allocation is a useful later polish
+item, not a first-day dependency. Keep three or fewer supply colors, fixed pickup
+poses, one arm, and supported structures until the full loop is reliable.
