@@ -100,13 +100,15 @@ exists. See [CONTRIBUTING](../CONTRIBUTING.md).
 - Real jaw calibration, magnetic behavior, table pose, and layered cube pitch.
 - Available work hours, robot access, and organizer rules on pre-event work.
 
-## Repository sync blocker
+## Repository sync
 
-The local bootstrap is committed on `main`, but the push to
-`https://github.com/chhabra-anirudh/legobot.git` failed: Git's configured
-`credential-manager-core` helper is unavailable and GitHub rejected HTTPS
-credentials. GitHub CLI is not installed in this environment. Authenticate this
-checkout with an approved GitHub credential helper or SSH setup, then run
-`git push -u origin main`. Do not put tokens in this file or in chat. Fetch and
-inspect remote history first if teammates have initialized the repository since
-this clone. Remove this blocker after confirming a successful push.
+Resolved 2026-09-12. Authentication is configured in this checkout via the GitHub
+CLI (`gh auth status` reports a logged-in account with `repo` scope; Git uses the
+`osxkeychain` helper over HTTPS). The earlier blocker entry, which reported a
+failed bootstrap push and a missing `credential-manager-core` helper, is obsolete.
+
+Remote state: `origin/main` is at `c4b22b0`, matching the local bootstrap. Active
+branches are `origin/feat/gripper-calibration` (teammate gripper measurement, not
+merged) and `origin/docs/offline-grasp-primitive` (top-down grasp plan update, not
+merged). Both still need review and a merge decision. Do not put tokens in this
+file or in chat.
