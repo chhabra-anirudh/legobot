@@ -1,0 +1,3 @@
+-r requirements-physics.txt
+# Only needed to regenerate collision assets, not to run episodes.
+coacd==1.0.14

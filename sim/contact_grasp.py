@@ -1,5 +1,6 @@
 """Isolated URDF gripper contact experiment; not a full-arm digital twin."""
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import xml.etree.ElementTree as ET
@@ -20,13 +21,15 @@ def quaternion(R):
     return numbers(q)
 
 
-def make_model(friction=.8, mass=.03, geometry="mesh_hulls"):
+def make_model(friction=.8, mass=.03, geometry="decomposed", torsional_friction=.001):
     """Separate convex hull per finger: intentionally conservative proxies.
 
     The dynamic EEF follows a mocap target through a weld; fingers use URDF hinges.
     No equality or force attaches the cube to the gripper.
     """
-    if geometry not in ['mesh_hulls', 'pads']:
+    if not np.isfinite(torsional_friction) or torsional_friction < 0:
+        raise ValueError('nonnegative finite torsional friction required')
+    if geometry not in ['mesh_hulls', 'decomposed', 'pads']:
         raise ValueError('unknown collision geometry')
     if not np.isfinite(friction) or friction < 0 or not np.isfinite(mass) or mass <= 0:
         raise ValueError('finite nonnegative friction and positive mass required')
@@ -38,7 +41,7 @@ def make_model(friction=.8, mass=.03, geometry="mesh_hulls"):
     ET.SubElement(root, 'option', timestep='0.001', gravity='0 0 -9.81', integrator='implicitfast', cone='elliptic')
     asset = ET.SubElement(root, 'asset')
     world = ET.SubElement(root, 'worldbody')
-    ET.SubElement(world, 'geom', name='table', type='plane', size='.2 .2 .01', friction=f'{friction} 0.001 0.0001')
+    ET.SubElement(world, 'geom', name='table', type='plane', size='.2 .2 .01', friction=f'{friction} {torsional_friction} 0.0001')
     ET.SubElement(world, 'body', name='target', mocap='true', pos='0 0 .08', quat='0 1 0 0')
     hand = ET.SubElement(world, 'body', name='eef', pos='0 0 .08', quat='0 1 0 0', gravcomp='1')
     ET.SubElement(hand, 'freejoint', name='eef_free')
@@ -61,16 +64,34 @@ def make_model(friction=.8, mass=.03, geometry="mesh_hulls"):
                           face=' '.join(str(int(v)) for v in inverse[faces].ravel()))
             ET.SubElement(body, 'geom', name=f'visual{i}', type='mesh', mesh=mesh_name,
                           contype='0', conaffinity='0', group='2', density='0')
+            if geometry == 'decomposed':
+                archive = Path(__file__).resolve().parent/'collision'/f'finger{i}.npz'
+                manifest = json.loads((archive.parent/'manifest.json').read_text())
+                source = manifest['fingers'][i]
+                if (hashlib.sha256(URDF.read_bytes()).hexdigest() != manifest['urdf_sha256'] or
+                    hashlib.sha256(Path(vis['mesh']).read_bytes()).hexdigest() != source['source_sha256'] or
+                    hashlib.sha256(archive.read_bytes()).hexdigest() != source['asset_sha256']):
+                    raise ValueError('collision assets stale or modified; regenerate and review')
+                with np.load(archive, allow_pickle=False) as parts:
+                    count = len(parts.files)//2
+                    for part in range(count):
+                        part_name = f'part{i}_{part}'
+                        ET.SubElement(asset, 'mesh', name=part_name, vertex=numbers(parts[f'vertices{part}']),
+                                      face=' '.join(str(int(v)) for v in parts[f'faces{part}'].ravel()))
+                        ET.SubElement(body, 'geom', name=f'finger_geom{i}_{part}', type='mesh', mesh=part_name,
+                                      mass=str(.04/count), friction=f'{friction} {torsional_friction} 0.0001', condim='4',
+                                      solref='.005 1', rgba='.4 .6 .8 1')
+                continue
             if geometry == 'pads':
                 ref_t, ref_R = joint_transform(joint, .15)
                 desired = np.array([0, (.0127+.004)*(1 if i == 0 else -1), .004])
                 local = ref_R.T @ (et+er@desired-ref_t)
                 ET.SubElement(body, 'geom', name=f'finger_geom{i}', type='box', size='.01 .004 .004',
                               pos=numbers(local), quat=quaternion(ref_R.T@er), mass='.04',
-                              friction=f'{friction} 0.001 0.0001', condim='3', solref='.005 1', rgba='.2 .8 .4 1')
+                              friction=f'{friction} {torsional_friction} 0.0001', condim='4', solref='.005 1', rgba='.2 .8 .4 1')
                 continue
             ET.SubElement(body, 'geom', name=f'finger_geom{i}', type='mesh', mesh=mesh_name,
-                          mass='.04', friction=f'{friction} 0.001 0.0001', condim='3',
+                          mass='.04', friction=f'{friction} {torsional_friction} 0.0001', condim='4',
                           solref='.005 1', rgba='.4 .6 .8 1')
         ET.SubElement(actuator, 'position', name=f'jaw_drive{i}', joint=f'jaw{i}', kp='4', kv='.05',
                       ctrlrange='0 1', forcerange='-.15 .15')
@@ -82,15 +103,15 @@ def make_model(friction=.8, mass=.03, geometry="mesh_hulls"):
     cube = ET.SubElement(world, 'body', name='cube', pos='0 0 .0127')
     ET.SubElement(cube, 'freejoint', name='cube_free')
     ET.SubElement(cube, 'geom', name='cube_geom', type='box', size='.0127 .0127 .0127', mass=str(mass),
-                  friction=f'{friction} 0.001 0.0001', condim='3', solref='.005 1', rgba='.95 .4 .2 1')
+                  friction=f'{friction} {torsional_friction} 0.0001', condim='4', solref='.005 1', rgba='.95 .4 .2 1')
     xml = ET.tostring(root, encoding='unicode')
     return mujoco.MjModel.from_xml_string(xml)
 
 
-def run_episode(*, close=True, friction=.8, seed=0, depth=1/3, mass=.03, geometry="mesh_hulls"):
+def _run_episode(*, close=True, friction=.8, seed=0, depth=1/3, mass=.03, geometry="decomposed", torsional_friction=.001):
     if not np.isfinite(depth) or not 0 < depth < 1:
         raise ValueError('depth must be a fraction strictly between zero and one')
-    model = make_model(friction, mass, geometry)
+    model = make_model(friction, mass, geometry, torsional_friction)
     data = mujoco.MjData(model)
     rng = np.random.default_rng(seed)
     xy = rng.uniform(-.003, .003, 2)
@@ -110,7 +131,9 @@ def run_episode(*, close=True, friction=.8, seed=0, depth=1/3, mass=.03, geometr
     mujoco.mj_forward(model, data)
     cube_id = model.geom('cube_geom').id
     table_id = model.geom('table').id
-    finger_ids = {model.geom(f'finger_geom{i}').id for i in range(2)}
+    finger_bodies = {model.body(f'finger{i}').id for i in range(2)}
+    finger_ids = {g for g in range(model.ngeom) if model.geom_bodyid[g] in finger_bodies
+                  and model.geom_contype[g] != 0}
     frames = []
     hold_good, hold_total, bad_table = 0, 0, False
     stages = [('settle', .3, hover, .35), ('descend', 1., grasp, .35),
@@ -138,7 +161,7 @@ def run_episode(*, close=True, friction=.8, seed=0, depth=1/3, mass=.03, geometr
                 force = np.zeros(6)
                 mujoco.mj_contactForce(model, data, contact_index, force)
                 if contact.dist <= 0 and cube_id in pair and force[0] > .01:
-                    contacts.update(pair & finger_ids)
+                    contacts.update(int(model.geom_bodyid[g]) for g in pair & finger_ids)
                 if contact.dist < -.0001 and table_id in pair and pair & finger_ids:
                     bad_table = True
             pos = data.body('cube').xpos.copy()
@@ -156,16 +179,39 @@ def run_episode(*, close=True, friction=.8, seed=0, depth=1/3, mass=.03, geometr
                                'finger_angles_rad': [float(data.qpos[model.joint(f'jaw{i}').qposadr[0]]) for i in range(2)],
                                'command_rad': data.ctrl.tolist(), 'finger_contacts': len(contacts)})
     final = data.body('cube').xpos.copy()
+    final_tilt = float(np.arccos(np.clip(np.max(np.abs(data.body('cube').xmat.reshape(3,3)[2])), 0, 1)))
+    final_speed = float(np.linalg.norm(data.qvel[model.joint('cube_free').dofadr[0]:model.joint('cube_free').dofadr[0]+3]))
     stable = bool(np.all(np.isfinite(data.qpos)) and not any(w.number for w in data.warning))
     result = {'schema_version': 1, 'frame': 'experiment_table', 'mujoco_version': mujoco.__version__,
               'numerically_stable': stable, 'seed': seed, 'mode': 'isolated_gripper_contact_sim', 'close_enabled': close, 'geometry': geometry,
-              'friction': friction, 'mass_kg': mass, 'grasp_depth_from_top': depth,
+              'friction': friction, 'torsional_friction_m': torsional_friction, 'mass_kg': mass, 'grasp_depth_from_top': depth,
               'hold_success': bool(stable and hold_good == hold_total and hold_total > 0),
               'hold_contact_fraction': hold_good/hold_total,
               'finger_table_collision': bad_table,
               'placement_error_m': float(np.linalg.norm(final-np.r_[xy, .0127])),
               'final_cube_position_m': final.tolist(),
-              'success': bool(stable and hold_good == hold_total and not bad_table and np.linalg.norm(final-np.r_[xy, .0127]) < .003)}
+              'final_tilt_rad': final_tilt, 'final_speed_m_s': final_speed,
+              'success': bool(stable and hold_good == hold_total and not bad_table and np.linalg.norm(final-np.r_[xy, .0127]) < .003
+                              and final_tilt < np.deg2rad(5) and final_speed < .01)}
+    return result, frames
+
+
+def run_episode(**kwargs):
+    """Run sequentially: MuJoCo's warning callback is process-global."""
+    messages = {}
+    previous = mujoco.get_mju_user_warning()
+    def record_warning(message):
+        messages[message] = messages.get(message, 0)+1
+    mujoco.set_mju_user_warning(record_warning)
+    try:
+        result, frames = _run_episode(**kwargs)
+    finally:
+        mujoco.set_mju_user_warning(previous)
+    result['solver_warnings'] = messages
+    if messages:
+        result['numerically_stable'] = False
+        result['hold_success'] = False
+        result['success'] = False
     return result, frames
 
 
@@ -179,19 +225,20 @@ def save_replay(frames, path, geometry):
     rr.log('cube/shape', rr.Boxes3D(half_sizes=[[.0127]*3], colors=[[240, 110, 70]]), static=True)
     model = make_model(geometry=geometry)
     for i in range(2):
-        if geometry == 'pads':
-            geom = model.geom(f'finger_geom{i}')
-            rr.log(f'finger{i}/shape', rr.Transform3D(translation=geom.pos, quaternion=rr.Quaternion(xyzw=np.roll(geom.quat, -1))), static=True)
-            rr.log(f'finger{i}/shape', rr.Boxes3D(half_sizes=[geom.size], colors=[[60, 190, 110]]), static=True)
-        else:
-            # Compiled mesh vertices + mesh geom transform display the supplied surface.
-            geom = model.geom(f'finger_geom{i}')
-            mesh_id = geom.dataid[0]
-            va, vn = model.mesh_vertadr[mesh_id], model.mesh_vertnum[mesh_id]
-            fa, fn = model.mesh_faceadr[mesh_id], model.mesh_facenum[mesh_id]
-            rr.log(f'finger{i}/shape', rr.Transform3D(translation=geom.pos, quaternion=rr.Quaternion(xyzw=np.roll(geom.quat, -1))), static=True)
-            rr.log(f'finger{i}/shape', rr.Mesh3D(vertex_positions=model.mesh_vert[va:va+vn],
-                   triangle_indices=model.mesh_face[fa:fa+fn], albedo_factor=[.4,.6,.8,1]), static=True)
+        for geom_id in range(model.ngeom):
+            if model.geom_bodyid[geom_id] != model.body(f'finger{i}').id or model.geom_contype[geom_id] == 0:
+                continue
+            geom = model.geom(geom_id)
+            entity = f'finger{i}/shape{geom_id}'
+            rr.log(entity, rr.Transform3D(translation=geom.pos, quaternion=rr.Quaternion(xyzw=np.roll(geom.quat, -1))), static=True)
+            if geometry == 'pads':
+                rr.log(entity, rr.Boxes3D(half_sizes=[geom.size], colors=[[60, 190, 110]]), static=True)
+            else:
+                mesh_id = geom.dataid[0]
+                va, vn = model.mesh_vertadr[mesh_id], model.mesh_vertnum[mesh_id]
+                fa, fn = model.mesh_faceadr[mesh_id], model.mesh_facenum[mesh_id]
+                rr.log(entity, rr.Mesh3D(vertex_positions=model.mesh_vert[va:va+vn],
+                       triangle_indices=model.mesh_face[fa:fa+fn], albedo_factor=[.4,.6,.8,1]), static=True)
     for f in frames:
         rr.set_time('physics', duration=f['time_s'])
         rr.log('cube', rr.Transform3D(translation=f['cube_position_m'], quaternion=rr.Quaternion(xyzw=np.roll(f['cube_quaternion_wxyz'], -1))))
@@ -204,15 +251,16 @@ def save_replay(frames, path, geometry):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--geometry', choices=['mesh_hulls', 'pads'], default='mesh_hulls')
+    parser.add_argument('--geometry', choices=['mesh_hulls', 'decomposed', 'pads'], default='decomposed')
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--no-close', action='store_true')
     parser.add_argument('--friction', type=float, default=.8)
+    parser.add_argument('--torsional-friction', type=float, default=.001)
     parser.add_argument('--depth', type=float, default=1/3)
     parser.add_argument('--output', type=Path)
     parser.add_argument('--save', type=Path, help='Rerun physics recording')
     args = parser.parse_args()
-    result, frames = run_episode(seed=args.seed, close=not args.no_close, friction=args.friction, depth=args.depth, geometry=args.geometry)
+    result, frames = run_episode(seed=args.seed, close=not args.no_close, friction=args.friction, depth=args.depth, geometry=args.geometry, torsional_friction=args.torsional_friction)
     if args.output:
         args.output.mkdir(parents=True, exist_ok=True)
         (args.output/'result.json').write_text(json.dumps(result, indent=2)+'\n')
