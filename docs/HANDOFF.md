@@ -120,8 +120,9 @@ results under provisional physics assumptions, not hardware or ML validation.
 Next: failure-aware expert stages and low-friction/contact-proxy validation on a
 new feature branch, before collecting training demonstrations.
 
-Remote publication is pending: automatic approval review requires explicit user
-approval for pushing this merge directly to shared `main`.
+Remote publication completed after explicit user approval. Fetched and confirmed
+no divergent remote changes, then pushed the verified merge and viewer handoff
+to `origin/main` successfully on 2026-09-12.
 Viewer setup: native WSL Rerun could not create an R32Float render target with
 this graphics driver. Browser serving starts successfully with:
 `.venv/bin/rerun --serve-web --bind 127.0.0.1 --web-viewer-port 9090 outputs/contact.rrd outputs/assembly.rrd`.
