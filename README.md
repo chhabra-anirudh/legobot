@@ -4,7 +4,7 @@ Prompt-to-structure assembly with BracketBot and 1-inch (25.4 mm) magnetic cubes
 One arm and a finger gripper; imitation learning for pickup is planned.
 
 **Start here:** [Current status and next tasks](docs/HANDOFF.md) ·
-[Build plan](docs/BUILD_PLAN.md) · [Contributing](CONTRIBUTING.md)
+[Build plan](docs/BUILD_PLAN.md) · [Contributing](CONTRIBUTING.md) · [Gripper calibration](docs/GRIPPER_CALIBRATION.md)
 
 ## What works today
 

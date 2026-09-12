@@ -1,0 +1,127 @@
+{
+  "method": "visual-mesh conservative envelope clipped to cube X/Z slab",
+  "frame": "left_eef",
+  "cube_size_m": 0.0254,
+  "cube_center_tool_m": [
+    0,
+    0,
+    0.004
+  ],
+  "limitations": "Not contact force, collision certification, pad compliance, or hardware calibration. Negative clearance indicates envelope interference; positive clearance does not prove a stable grasp.",
+  "measurements": [
+    {
+      "angle_rad": 0.0,
+      "slab_intersects_both_fingers": true,
+      "gap_m": -0.0003977420089367966,
+      "gap_center_y_m": 0.0012565242397803479,
+      "left_clearance_m": -0.01164234676468805,
+      "right_clearance_m": -0.014155395244248746,
+      "outer_width_m": 0.02514206699743797,
+      "fingertip_table_clearance_m": 0.0029799798205421123
+    },
+    {
+      "angle_rad": 0.05,
+      "slab_intersects_both_fingers": true,
+      "gap_m": 0.008222978976722356,
+      "gap_center_y_m": 0.0011010183895218918,
+      "left_clearance_m": -0.0074874921221169295,
+      "right_clearance_m": -0.009689528901160713,
+      "outer_width_m": 0.03354353946814391,
+      "fingertip_table_clearance_m": 0.0023041423928299217
+    },
+    {
+      "angle_rad": 0.1,
+      "slab_intersects_both_fingers": true,
+      "gap_m": 0.016501589494502828,
+      "gap_center_y_m": 0.0010983523442715886,
+      "left_clearance_m": -0.0033508529084769964,
+      "right_clearance_m": -0.005547557597020174,
+      "outer_width_m": 0.04186891618985373,
+      "fingertip_table_clearance_m": 0.0018441744676176378
+    },
+    {
+      "angle_rad": 0.15,
+      "slab_intersects_both_fingers": true,
+      "gap_m": 0.024774660997848585,
+      "gap_center_y_m": 0.0011008756715749704,
+      "left_clearance_m": 0.0007882061704992636,
+      "right_clearance_m": -0.0014135451726506772,
+      "outer_width_m": 0.05016119161552733,
+      "fingertip_table_clearance_m": 0.0015647859134557598
+    },
+    {
+      "angle_rad": 0.185,
+      "slab_intersects_both_fingers": true,
+      "gap_m": 0.030584828187787697,
+      "gap_center_y_m": 0.0011057897728016667,
+      "left_clearance_m": 0.0036982038666955146,
+      "right_clearance_m": 0.0014866243210921812,
+      "outer_width_m": 0.05596847655168702,
+      "fingertip_table_clearance_m": 0.0015288271649312943
+    },
+    {
+      "angle_rad": 0.19,
+      "slab_intersects_both_fingers": true,
+      "gap_m": 0.031417149260996334,
+      "gap_center_y_m": 0.0011067079002660268,
+      "left_clearance_m": 0.004115282530764194,
+      "right_clearance_m": 0.0019018667302321407,
+      "outer_width_m": 0.05679926257362906,
+      "fingertip_table_clearance_m": 0.001534427207483098
+    },
+    {
+      "angle_rad": 0.2,
+      "slab_intersects_both_fingers": true,
+      "gap_m": 0.03308394700506857,
+      "gap_center_y_m": 0.0011087086771621952,
+      "left_clearance_m": 0.004950682179696481,
+      "right_clearance_m": 0.002733264825372091,
+      "outer_width_m": 0.05846212815471035,
+      "fingertip_table_clearance_m": 0.001553679486395806
+    },
+    {
+      "angle_rad": 0.25,
+      "slab_intersects_both_fingers": true,
+      "gap_m": 0.04147258587888611,
+      "gap_center_y_m": 0.0011220819516890562,
+      "left_clearance_m": 0.009158374891132113,
+      "right_clearance_m": 0.006914210987754001,
+      "outer_width_m": 0.06748817042563092,
+      "fingertip_table_clearance_m": 0.0018108829467213417
+    },
+    {
+      "angle_rad": 0.35,
+      "slab_intersects_both_fingers": true,
+      "gap_m": 0.058673180542562674,
+      "gap_center_y_m": 0.0011669999781656962,
+      "left_clearance_m": 0.017803590249447034,
+      "right_clearance_m": 0.015469590293115641,
+      "outer_width_m": 0.08713910033410839,
+      "fingertip_table_clearance_m": 0.0031269790025880637
+    },
+    {
+      "angle_rad": 0.6,
+      "slab_intersects_both_fingers": true,
+      "gap_m": 0.10684260053608713,
+      "gap_center_y_m": 0.0014222762570878338,
+      "left_clearance_m": 0.0421435765251314,
+      "right_clearance_m": 0.03929902401095574,
+      "outer_width_m": 0.1342290605592209,
+      "fingertip_table_clearance_m": 0.01098623745561258
+    },
+    {
+      "angle_rad": 1.0,
+      "slab_intersects_both_fingers": false
+    }
+  ],
+  "contact_candidate": {
+    "angle_rad": 0.15377368181943896,
+    "cube_center_tool_m": [
+      0.0,
+      0.0011012794117364203,
+      0.004
+    ],
+    "gap_m": 0.025400000584657585,
+    "status": "geometric candidate only; verify contacts and hardware before use"
+  }
+}
