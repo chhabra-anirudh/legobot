@@ -5,7 +5,7 @@ workstream. Individual teammate assignments are not yet confirmed.
 
 ## Current milestone
 
-Mesh-based gripper calibration on `feat/gripper-calibration`. The shared source of
+Integrated gripper geometry tooling and offline expert plan on `main`. The shared source of
 truth is this repository, not the earlier `battle_of_schools_hackathon` files.
 See [BUILD_PLAN.md](BUILD_PLAN.md) for the combined hackathon and ML proposal.
 
@@ -38,17 +38,19 @@ The solver starts at an approach pose, not a physical startup/home configuration
 
 | Priority | Task and completion criterion | Owner / branch |
 | --- | --- | --- |
-| 1 | Verify finger contact geometry; document jaw width vs angle and tool grasp point | Codex — `feat/gripper-calibration`; mesh probe complete, physical measurements pending |
+| 1 | Verify finger contact geometry; document jaw width vs angle and tool grasp point | Mesh probe merged; physical measurements pending / owner unassigned |
 | 2 | Minimal contact simulator: cube can be lifted and held under gravity without idealized attachment | Unassigned — Robotics/ML |
 | 3 | Freeze structure/placement interfaces; validate supported two-layer examples against fake executor | Unassigned — Compiler |
 | 4 | Identify robot API, feedback, camera, fixtures, actual access time; measure grasp repeatability | Unassigned — Hardware/integration |
-| 5 | Record successful expert episodes with observation/action contract and held-out split | Unassigned — ML; depends on task 2 |
-| 6 | Behavior-cloning baseline and held-out evaluation against scripted expert | Unassigned — ML; depends on task 5 |
+| 5 | Implement simulated top-down expert with configurable grasp depth; verify contacts before labeling success | Unassigned — Robotics/ML; depends on task 2 |
+| 6 | Record successful expert episodes with observation/action contract and held-out split | Unassigned — ML; depends on task 5 |
+| 7 | Behavior-cloning baseline and held-out evaluation against scripted expert | Unassigned — ML; depends on task 6 |
 
 **Next robotics action:** add a one-cube contact scene using the documented
 geometric candidate and validate finger collision proxies, table clearance, and
 a held-lift success signal. Carry out the physical calibration procedure when
-robot access is available. Do not train on the
+robot access is available. Assume no robot access until confirmed: the scripted
+simulation expert is the default demonstration source. Do not train on the
 current artificial attachment and label it a learned physical grasp.
 
 ## Reproduction and verification
@@ -104,3 +106,27 @@ were deliberately left provisional pending contact validation.
 The candidate is 0.153774 rad with a +1.101 mm local Y centre correction. At the
 configured 0.19 rad angle the cube has clearance on both sides. Do not generate
 successful physical-grasp labels from the existing idealized attachment.
+
+## Branch integration review
+
+Reviewed and integrated `feat/gripper-calibration` (3667218) and
+`docs/offline-grasp-primitive` (ef55393). Their overlapping handoff edits were
+combined. The offline primitive is a plan, not implemented functionality.
+No changes were made to the assembly configuration during this merge.
+
+The proposed `grasp_depth_from_top = 1/3` targets a contact reference 4.23 mm
+above cube centre. A reference height is not a measured pad extent. Raising the
+tool may increase nominal table clearance but requires a new depth-dependent
+mesh/contact check; do not claim it guarantees clearance or a stable grasp.
+For a downward tool and fixed local contact reference, raising the tool by `h/6`
+moves the cube centre by **+h/6 in tool-local Z**, not minus. The existing
+`tool_grasp_point_m` means cube centre, so do not silently reinterpret that field
+as a pad/contact reference when implementing this feature.
+
+Next integration milestone: a physically evaluated one-cube contact scene plus
+the configurable top-down expert. Keep hardware calibration and learned-policy
+training explicitly pending. Source branches are retained for team traceability.
+
+Merge verification: all 11 tests passed; the default assembly validated 396 frames;
+headless recording completed (54 links, 50 meshes); a freshly generated geometry
+report matched the checked-in JSON exactly. No hardware or ML validation ran.
