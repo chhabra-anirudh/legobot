@@ -84,3 +84,14 @@ exists. See [CONTRIBUTING](../CONTRIBUTING.md).
 - Robot control API, control frequency, feedback and grasp verification signals.
 - Real jaw calibration, magnetic behavior, table pose, and layered cube pitch.
 - Available work hours, robot access, and organizer rules on pre-event work.
+
+## Repository sync blocker
+
+The local bootstrap is committed on `main`, but the push to
+`https://github.com/chhabra-anirudh/legobot.git` failed: Git's configured
+`credential-manager-core` helper is unavailable and GitHub rejected HTTPS
+credentials. GitHub CLI is not installed in this environment. Authenticate this
+checkout with an approved GitHub credential helper or SSH setup, then run
+`git push -u origin main`. Do not put tokens in this file or in chat. Fetch and
+inspect remote history first if teammates have initialized the repository since
+this clone. Remove this blocker after confirming a successful push.
