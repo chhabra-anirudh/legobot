@@ -122,3 +122,8 @@ new feature branch, before collecting training demonstrations.
 
 Remote publication is pending: automatic approval review requires explicit user
 approval for pushing this merge directly to shared `main`.
+Viewer setup: native WSL Rerun could not create an R32Float render target with
+this graphics driver. Browser serving starts successfully with:
+`.venv/bin/rerun --serve-web --bind 127.0.0.1 --web-viewer-port 9090 outputs/contact.rrd outputs/assembly.rrd`.
+Open `http://127.0.0.1:9090?url=rerun%2Bhttp%3A%2F%2Flocalhost%3A9876%2Fproxy`.
+Both recordings loaded into the local server; browser rendering is not verified.
