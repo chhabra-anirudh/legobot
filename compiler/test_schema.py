@@ -140,10 +140,18 @@ class ExampleFileTests(unittest.TestCase):
         self.assertEqual(quiet([str(EXAMPLES/'dog.json')]), 0)
 
     def test_rejection_example_fails_for_the_documented_reasons(self):
+        """Floating cube and island, plus no finger clearance.
+
+        This example is the original 45-cube dog silhouette with two faults added.
+        A solid silhouette is also unbuildable in its own right: with two opposed
+        pads, an interior cube whose in-layer neighbours are already placed cannot
+        be reached, so `no_clearance` is reported alongside the two planted faults.
+        The accepted `dog.json` is a one-cube-wide outline for exactly this reason.
+        """
         from schema import load
         report = validate(load(EXAMPLES/'dog-floating-rejected.json'))
         self.assertFalse(report.ok)
-        self.assertEqual(report.codes(), ['disconnected', 'unsupported'])
+        self.assertEqual(report.codes(), ['disconnected', 'no_clearance', 'unsupported'])
         self.assertEqual(quiet([str(EXAMPLES/'dog-floating-rejected.json')]), 1)
 
 

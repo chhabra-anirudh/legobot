@@ -15,9 +15,11 @@ gravity using the finger joints. The [centered foam-pad model](docs/CENTERED_GRA
 checks with measured force/slip gates and configurable colors. Foam parameters
 remain provisional; heavier-load slip and real calibration are unresolved. A [structure compiler](compiler/README.md) turns a prompt into a
 voxel model with Claude and checks it deterministically for support,
-connectivity, colors, and budgets. Full-arm collision checking, learned pickup,
-vision, placement/tool-pose compilation, and hardware execution are not
-implemented yet.
+connectivity, colors, and budgets. A [robot bridge](robot/build_bridge.py) now streams a planned trajectory
+to the real arm over bbos, range-checked against the arm's own calibration, and
+**the arm has been driven from a simulated plan**. Attachment is still idealized
+and there is no held-cube signal, so that is a motion run, not a verified build.
+Full-arm collision checking, learned pickup, and vision are not implemented yet.
 
 ## Run the baseline
 
@@ -47,6 +49,8 @@ conventions and learning walkthrough. These scripts do not command the real robo
 - `docs/HANDOFF.md`: current implementation, task ownership, verification, blockers.
 - `sim/`: simulation scripts, tests, configuration, and supplied URDF/meshes.
 - `compiler/`: prompt to voxel structure, deterministic checks, and examples.
+- `robot/`: read-only arm probe, pose teaching, and the trajectory bridge. These
+  run on the robot with `uv run`, not on the workstation.
 - `AGENTS.md`: handoff and collaboration instructions for coding agents.
 
 Update the handoff at each completed milestone so the next teammate can continue

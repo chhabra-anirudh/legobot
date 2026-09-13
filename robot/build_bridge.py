@@ -145,36 +145,42 @@ def main(argv=None):
     print('enabling torque in 3s - hand on the e-stop')
     time.sleep(3)
 
-    with Writer(f'{ARM}.torque', Type('arm_torque')) as w_torque, \
+    # A Writer is paced by bbos itself: `buf()` ends in Loop.keeptime(), which
+    # sleeps out the type's 15 ms period. That clock is per process and shared,
+    # and it only sleeps once per registered keeptime writer, so a second paced
+    # writer we do not touch every tick would halve the rate. Torque is written
+    # once, so open it unpaced and let ctrl alone drive the loop. For the same
+    # reason there is no sleep in the send loop; adding one would slow the build
+    # rather than speed-limit it.
+    with Writer(f'{ARM}.torque', Type('arm_torque'), keeptime=False) as w_torque, \
             Writer(f'{ARM}.ctrl', Type('arm_ctrl')) as w_ctrl:
         enable = np.ones(dof, dtype=np.bool_)
         if not args.gripper:
             enable[dof-1] = False
-        w_torque.data['enable'][:] = enable
-        w_torque.data['tau_mode'][:] = np.zeros(dof, dtype=np.bool_)
-        w_torque.data['compliance_mode'] = False
-        w_torque.write()
+        with w_torque.buf() as b:
+            b['enable'][:] = enable
+            b['tau_mode'][:] = np.zeros(dof, dtype=np.bool_)
+            b['compliance_mode'] = False
 
         def send(q):
-            w_ctrl.data['pos'][:] = q.astype(np.float32)
-            w_ctrl.data['vel'][:] = np.zeros(dof, np.float32)
-            w_ctrl.data['tau'][:] = np.zeros(dof, np.float32)
-            w_ctrl.data['alpha'] = 1.
-            w_ctrl.write()
+            with w_ctrl.buf() as b:
+                b['pos'][:] = q.astype(np.float32)
+                b['vel'][:] = np.zeros(dof, np.float32)
+                b['tau'][:] = np.zeros(dof, np.float32)
+                b['alpha'] = 1.
 
         try:
             for i in range(ramp_n+1):
                 send(state + (turns[0]-state)*(i/ramp_n))
-                time.sleep(CONTROL_PERIOD_S)
             print('at trajectory start; running the build')
             for i, q in enumerate(turns):
                 send(q)
-                time.sleep(CONTROL_PERIOD_S)
                 if i % 500 == 0:
                     print(f'  {i}/{len(turns)} ({i*CONTROL_PERIOD_S:.0f}s)', flush=True)
-            print('build complete; holding position')
+            print('build complete. The daemon cuts torque as soon as this writer '
+                  'closes, so the arm goes limp on exit - it is not holding anything.')
         except KeyboardInterrupt:
-            print('\ninterrupted - holding the last commanded pose, torque still on')
+            print('\ninterrupted - releasing the writer, so the arm goes limp')
             return 130
     return 0
 

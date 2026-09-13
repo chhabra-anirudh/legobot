@@ -35,6 +35,34 @@ The earlier teammate claim of 25.4 mm at 0.185 rad does not match this particula
 probe depth. It may use another contact zone. Preserve the probe definition when
 comparing numbers; do not silently select the measurement that looks best.
 
+## Hardware measurement (2026-09-12) — partial, supersedes the guesses below
+
+Robot `bracketbot-0152`, left arm. With a 25.4 mm cube held in the jaw, the arm
+daemon reports `left_left_gripper` = **0.2301 rad** (-0.03662 turns). Conversion:
+URDF rad = -2*pi*turns (`gripper_sign = -1`).
+
+This is **wider** than the 0.153774 rad width-matching candidate below, by about
+0.076 rad. The mesh probe measures *bare* fingers; the foam pads take up roughly
+6 mm per side, so the jaw sits further open for the same cube. Do not use the
+bare-finger candidate as a grasp command on padded fingers.
+
+`sim/assembly_config.json` now uses `gripper_grasp_rad = 0.21` — a little past the
+measured hold, so the foam compresses — and keeps `gripper_open_rad = 0.35`.
+
+**Closing past contact is safe on this hardware**, which reverses the warning at
+the end of the next section. The arm daemon runs a J7 current-relief loop
+(`j7_relief_enable = True`, `j7_relief_i_hold = 1.5 A`, backoff capped at 0.1 turns
+by `j7_relief_bias_max`) and holds the gripper at `torque_limit[7] = 300` of 1000.
+Commanding past the cube makes the loop settle to a gentle current-limited hold
+instead of stalling the motor. That loop's `i_hold` is marked "TUNE on hardware"
+in `bbos` and has not been tuned here.
+
+Gripper range from `ranges.calibration.json` is `[-0.379, 0]` turns, i.e. about
+0 to 2.38 rad. Note the URDF caps this joint at 1.0 rad, narrower than the real jaw.
+
+Still not measured: jaw gap versus angle on the real pads, the contact region,
+repeatability, and any held-cube signal. Steps 2-5 of the procedure below remain open.
+
 ## Physical calibration procedure (pending robot access)
 
 1. Fix the robot base and identify actual encoder units, gripper command semantics,
