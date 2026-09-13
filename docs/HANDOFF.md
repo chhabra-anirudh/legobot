@@ -8,9 +8,10 @@ start new work from `main`, not from a feature branch. Individual owners are una
 recipe, hardware calibration numbers, the bbos interface reference, and the traps.
 This file is the running log.
 
-**Newest section is [First hardware execution](#first-hardware-execution-the-build-trajectory-on-the-real-arm-2026-09-12)** — the arm has now
-been driven from the simulated plan. Earlier sections describe older states and
-are kept for history; where they disagree, the hardware section is current.
+**Newest section is [A picture to a simulated build](#a-picture-to-a-simulated-build-2026-09-13)**. For hardware, the current
+section is [First hardware execution](#first-hardware-execution-the-build-trajectory-on-the-real-arm-2026-09-12) — the arm has been driven from the simulated
+plan. Earlier sections describe older states and are kept for history; where they
+disagree, the newer section is current.
 
 Robot-side state is backed up in `robot/` (scripts, `calibration/`, `diagnostics/`).
 The robot's `~/bbapps` is shared with other teams and is not version controlled:
@@ -38,14 +39,21 @@ contact physics and its nominal release fix are now integrated into local `main`
 - **Outputs:** per-episode result, 50 Hz JSONL trace, optional Rerun recording.
 - **Prompt to voxel structure:** `compiler/` turns a prompt into a checked voxel
   model using `claude-opus-5` with structured output, then applies deterministic
-  schema/support/connectivity/budget checks and a re-checked repair round. Two
-  cached examples: an accepted 45-cube dog and a negative control. The executor
-  half (build coordinates, tool poses, clearance) is not implemented.
+  schema/support/connectivity/clearance/budget checks and a re-checked repair
+  round. Cached examples: an accepted 16-cube dog, a 36-cube cat from a picture,
+  and a negative control.
+- **Picture to voxel structure:** `compiler/imaging.py` downsamples an image onto
+  the build grid and `compiler/simplify.py` reduces it to buildable line art;
+  `compiler/image_to_structure.py` runs the whole path deterministically or via a
+  vision model. See [the picture section](#a-picture-to-a-simulated-build-2026-09-13).
+- **Executor:** `sim/build_structure.py` turns a checked structure into staged
+  cubes, placement order, tool yaws, calibrated coordinates, a joint trajectory,
+  and an animation, gated on the measured reach map.
 
 ## Latest verification and remaining limits
 
-All **26 sim tests and 22 compiler tests pass** with physics dependencies
-installed. The kinematic plan now validates **409** frames: `tool_grasp_point_m`
+All **41 sim tests and 52 compiler tests pass** with physics dependencies
+installed (Pillow is additionally needed for the image tests; they skip without it). The kinematic plan now validates **409** frames: `tool_grasp_point_m`
 gained the 18 mm X offset so the assembly grasps where the foam pads actually
 meet the cube, instead of putting the nominal tool origin over the cube centre
 and contacting near the edge. Frame count changed because the IK targets moved. Refined physics recording generated successfully.
@@ -84,6 +92,11 @@ python3 -m venv .venv
 .venv/bin/python compiler/generate.py "a simple dog" --offline   # no model access
 .venv/bin/python compiler/check.py compiler/examples/dog.json --order
 .venv/bin/python -m unittest discover -s compiler -p 'test_*.py'
+
+# From a picture (--trace needs no model access; Pillow only):
+.venv/bin/python compiler/image_to_structure.py compiler/examples/images/cat.png \
+    --trace --grid 12 8 --output outputs/cat.json
+.venv/bin/python sim/build_structure.py compiler/examples/cat.json --check
 ```
 
 CoACD is only needed for asset regeneration (`requirements-collision.txt`), not
@@ -103,13 +116,85 @@ normal execution. See [CONTACT_SIM.md](CONTACT_SIM.md) and
 | 2 | Add failure-aware stage transitions and freeze observation/action timing, units, and frames | Robotics/ML, unassigned |
 | 3 | Generate successful contact demonstrations with pose/noise variation; split by episode | ML, depends on 1–2 |
 | 4 | Train behavior cloning and evaluate against the scripted expert on held-out scenes | ML, depends on 3 |
-| Parallel | Voxel schema and checker are implemented in `compiler/`; **next** is the placement side: calibrated build coordinates, tool poses, clearance filtering, and a fake executor for supported two-layer examples | Compiler, unassigned |
+| Parallel | Prompt and picture to a checked structure, and the executor (coordinates, tool poses, clearance, trajectory) are implemented. **Next:** run the vision path against a live API — it has never been called with credentials — and decide the per-colour cube inventory so `validate(..., inventory=...)` stops being provisional | Compiler, unassigned |
+| Parallel | Pictures currently come out as single-layer outlines. A two-layer picture build (silhouette plus a raised border) is the natural next compiler step, and the two-layer live demo in `BUILD_PLAN.md` still has no example | Compiler, unassigned |
 | Parallel | Confirm robot API, feedback, access, fixtures, and calibration procedure | Hardware, unassigned |
 
 **Next robotics action:** validate real foam geometry/compliance and heavier-cube
 slip, then add failure-aware transitions. Do not train on perfect-state
 diagnostic traces unchanged or call the old idealized replay a physical grasp.
 Assume no robot access until confirmed; hardware work need not block simulation.
+
+## A picture to a simulated build (2026-09-13)
+
+Offline work, on `main`. The pipeline now accepts an **image** as well as a prompt:
+
+```sh
+.venv/bin/python -m pip install -r requirements-llm.txt   # anthropic SDK + Pillow
+
+# deterministic, no model in the path at all
+.venv/bin/python compiler/image_to_structure.py compiler/examples/images/cat.png \
+    --trace --grid 12 8 --output outputs/cat.json
+# vision model path (untested against a live API: no credentials in this checkout)
+.venv/bin/python compiler/image_to_structure.py photo.png --subject "a cat" --grid 12 8
+
+# build it with coloured cubes in simulation
+.venv/bin/python sim/build_structure.py compiler/examples/cat.json --save outputs/cat.rrd
+```
+
+### What is new
+
+- `compiler/imaging.py`: image to a coarse colour grid. Aspect ratio preserved,
+  image centred, colours snapped to `sim/cube_colors.py`. Subject/background comes
+  from alpha when present, otherwise from distance to a background colour estimated
+  from the border pixels. Good for drawings and plain backgrounds; a busy
+  photograph gives a busy mask, which is why the downsample is always printed and
+  why `--tolerance`, `--coverage`, and `--invert` exist.
+- `compiler/simplify.py`: the reduction to something placeable. It traces the
+  **outer contour** of the silhouette by following the crack between filled and
+  empty cells, fills in diagonal pinch points so the loop stays face-connected,
+  thins any surviving 2x2 block, drops unsupported and stranded cubes, and repeats
+  until the checker accepts it. Every cube dropped or added is printed and stored
+  in the structure's new `provenance` field.
+- `compiler/image_to_structure.py`: three explicit paths, with honest labels —
+  `--trace` (`image_trace`, no model), the API path (the model id), and
+  `--request`/`--ingest` with a caller-supplied `--source`, which is how an
+  interactive agent can act as the vision model without the pipeline claiming it
+  called an API.
+- `Structure.provenance` (optional, omitted when empty, so existing files are
+  byte-identical): image path, image SHA-256, grid, mode, and the simplifications.
+
+### Finding: the placement search was dropping cubes it could have placed
+
+The first cat lost two cubes to `no_clearance`. Both were placeable. `placement.py`
+ranked cubes and never reconsidered, so a corner with one neighbour on each axis
+was walled in by two junctions that outranked it. A failed order is now retried
+with the stranded cubes forced to the front (`RETRIES = 8`). A bounded DFS was
+tried first and rejected: it exhausted 20 000 nodes on this 36-cube case without
+finding an order, while the retry finds one immediately. Genuinely solid regions
+are still reported as blocked, and that is still evidence of impracticality, not a
+proof that no order exists.
+
+### Cached example
+
+`compiler/examples/cat.json`, from `compiler/examples/images/cat.png` — a tracked
+1.8 kB flat-colour drawing, made with Pillow for this test rather than a
+photograph, so the example does not depend on anyone's camera roll. 36 cubes, one
+layer, no simplification needed. Its `source` states
+it came from a vision reply produced by an interactive `claude-opus-5-medium` agent
+session — **not** from an API call by this pipeline, and not hand-drawn from
+nothing: the agent was shown the image. `--trace` on the same picture gives a
+17-cube outline, which is what a deterministic pass without any model produces.
+
+Verified: **52 compiler tests** (22 before) and 41 sim tests pass.
+`sim/build_structure.py compiler/examples/cat.json` plans **3653** joint-limited
+poses for 36 cubes, choosing `--origin -0.1738 0.1754` from the reach map (34 of
+the lattice origins fit), and the Rerun recording was regenerated. Staging fits:
+36 isolated slots are reachable beside the build at the 0.5 m table.
+
+This is compiler and kinematic simulation work only. Attachment is still
+idealized, nothing here has run on hardware, and a picture that passes the checks
+is a picture that satisfies the stated rules — not one the robot has built.
 
 ## Reach-checked build origins, and the transfer tilt (2026-09-13)
 

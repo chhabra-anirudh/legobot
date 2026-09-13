@@ -1,4 +1,5 @@
 # Preserve the exact URDF bytes checked by collision-asset source hashes on Windows.
 *.urdf text eol=lf
 *.stl binary
+*.png binary
 *.npz binary

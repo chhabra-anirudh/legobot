@@ -1,2 +1,6 @@
 # LLM structure generation. Not needed to run the simulation or the checker.
 anthropic>=1,<2
+# Reading a picture into a cube grid (compiler/imaging.py). Needed by the image
+# pipeline, including its deterministic --trace path, but not by the text prompt
+# path or the simulation.
+pillow>=10,<13

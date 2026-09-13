@@ -156,15 +156,18 @@ support or connectivity elsewhere. Cache several fully checked demo structures.
 Gate: a valid small structure produces executable steps; a floating voxel and an
 intentionally blocked placement are rejected for the correct reason.
 
-**Status (2026-09-12): the proposal and checking half is implemented** in
-`compiler/` — prompt to voxel model via `claude-opus-5` with structured output,
-then deterministic checks for schema, direct support, 6-connectivity, colors,
-and cube/layer/footprint/inventory budgets, with a re-checked repair round when a
-proposal fails. `compiler/examples/dog.json` is a 45-cube accepted structure and
-`dog-floating-rejected.json` is the negative control. **Not implemented:** the
-executor half — calibrated build coordinates, tool poses, yaw search, clearance
-filtering, and path validation. Placement order is currently a bottom-up sort,
-not a reachability-checked sequence.
+**Status (2026-09-13): implemented, for prompts and for pictures.** `compiler/`
+turns a prompt or an image into a voxel model — via `claude-opus-5` with structured
+output, or deterministically with `--trace` — then runs schema, direct support,
+6-connectivity, finger clearance, colour, and cube/layer/footprint/inventory
+checks, with a re-checked repair round when a proposal fails. An image is
+downsampled onto the build grid and reduced to buildable line art, with every
+dropped or added cube reported. `sim/build_structure.py` is the executor:
+calibrated build coordinates, tool yaw per placement, reach-map gating, placement
+order, staging layout, joint trajectory export. Examples: `dog.json` (16 cubes,
+prompt), `cat.json` (36 cubes, picture), `dog-floating-rejected.json` (negative
+control). **Not implemented:** full-path collision validation against the robot
+model, and a confirmed per-colour inventory.
 
 ### 3. Contact simulation and demonstration collection
 

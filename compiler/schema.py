@@ -53,12 +53,21 @@ class Structure:
     source: str = 'unspecified'
     prompt: str = ''
     schema_version: int = SCHEMA_VERSION
+    # Optional record of where the design came from and what was changed to make
+    # it buildable: source image path and hash, grid, and the simplification
+    # actions. Omitted from the JSON when empty, so files without it are
+    # unchanged. Provenance only; the checks below never read it.
+    provenance: dict = None
 
     def to_dict(self):
-        return {'schema_version': self.schema_version, 'structure_id': self.structure_id,
-                'name': self.name, 'cube_size_m': self.cube_size_m, 'source': self.source,
-                'prompt': self.prompt,
-                'voxels': [{'x': v.x, 'y': v.y, 'z': v.z, 'color': v.color} for v in self.voxels]}
+        out = {'schema_version': self.schema_version, 'structure_id': self.structure_id,
+               'name': self.name, 'cube_size_m': self.cube_size_m, 'source': self.source,
+               'prompt': self.prompt,
+               'voxels': [{'x': v.x, 'y': v.y, 'z': v.z, 'color': v.color}
+                          for v in self.voxels]}
+        if self.provenance:
+            out['provenance'] = self.provenance
+        return out
 
     @classmethod
     def from_dict(cls, d):
@@ -78,7 +87,8 @@ class Structure:
         return cls(structure_id=d.get('structure_id', ''), name=d.get('name', ''),
                    voxels=parsed, cube_size_m=d.get('cube_size_m', NOMINAL_CUBE_SIZE_M),
                    source=d.get('source', 'unspecified'), prompt=d.get('prompt', ''),
-                   schema_version=d.get('schema_version', SCHEMA_VERSION))
+                   schema_version=d.get('schema_version', SCHEMA_VERSION),
+                   provenance=d.get('provenance'))
 
 
 @dataclass

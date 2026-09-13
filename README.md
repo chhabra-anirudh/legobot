@@ -1,7 +1,8 @@
 # LegoBot
 
-Prompt-to-structure assembly with BracketBot and 1-inch (25.4 mm) magnetic cubes.
-One arm and a finger gripper; imitation learning for pickup is planned.
+Prompt- or picture-to-structure assembly with BracketBot and 1-inch (25.4 mm)
+magnetic cubes. One arm and a finger gripper; imitation learning for pickup is
+planned.
 
 **Start here:** [Robot setup and status report](docs/ROBOT_SETUP.md) — full context for picking this up cold ·
 [Current status and next tasks](docs/HANDOFF.md) · [Build plan](docs/BUILD_PLAN.md) ·
@@ -14,9 +15,12 @@ joint-limited inverse kinematics and animated finger joints. Grasp attachment is
 idealized. An isolated [contact experiment](docs/CONTACT_SIM.md) now tests a free cube under
 gravity using the finger joints. The [centered foam-pad model](docs/CENTERED_GRASP.md) passes nominal lift/hold/return
 checks with measured force/slip gates and configurable colors. Foam parameters
-remain provisional; heavier-load slip and real calibration are unresolved. A [structure compiler](compiler/README.md) turns a prompt into a
+remain provisional; heavier-load slip and real calibration are unresolved. A [structure compiler](compiler/README.md) turns a prompt **or a picture** into a
 voxel model with Claude and checks it deterministically for support,
-connectivity, colors, and budgets. A [robot bridge](robot/build_bridge.py) now streams a planned trajectory
+connectivity, finger clearance, colors, and budgets; a picture is downsampled onto
+the build grid and reduced to buildable line art, with every cube it drops
+reported. `sim/build_structure.py` then stages coloured cubes on the table and
+animates the whole build with joint-limited IK, gated on the measured reach map. A [robot bridge](robot/build_bridge.py) now streams a planned trajectory
 to the real arm over bbos, range-checked against the arm's own calibration, and
 **the arm has been driven from a simulated plan**. Attachment is still idealized
 and there is no held-cube signal, so that is a motion run, not a verified build.
@@ -43,6 +47,19 @@ In Rerun select the `simulation` timeline and press Play. To save without a GUI:
 Edit `sim/assembly_config.json` to change the workspace and provisional grasp
 settings. See [simulation documentation](sim/README.md) for the coordinate
 conventions and learning walkthrough. These scripts do not command the real robot.
+
+## Picture to a simulated build
+
+```sh
+.venv/bin/python -m pip install -r requirements-llm.txt
+.venv/bin/python compiler/image_to_structure.py compiler/examples/images/cat.png \
+    --trace --grid 12 8 --output outputs/cat.json      # deterministic, no model
+.venv/bin/python sim/build_structure.py outputs/cat.json --save outputs/cat.rrd
+```
+
+Drop `--trace` to send the picture to a vision model instead. The cached result of
+doing that by hand is `compiler/examples/cat.json`: 36 cubes, which
+`sim/build_structure.py` plans as 3653 joint-limited poses.
 
 ## Layout
 

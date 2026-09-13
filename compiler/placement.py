@@ -28,44 +28,84 @@ def free_axis(cell, placed):
     return None
 
 
-def sequence(voxels):
-    """Bottom-up order respecting direct support and finger clearance.
+# How many times a failed order is retried with the stranded cubes forced first.
+# A cap, not a claim: hitting it means "not resolved", not "impossible".
+RETRIES = 8
 
-    Greedy and most-constrained-first: a cube with many neighbours in the
-    finished structure runs out of clearance soonest, so it goes early.
 
-    Returns (steps, blocked) where steps is a list of (voxel, axis). A non-empty
-    `blocked` means this heuristic found no order — evidence that the structure
-    is impractical, not a proof that no order exists.
-    """
-    remaining = {v.cell: v for v in voxels}
-
+def _ranking(cells):
+    """Order candidates are tried in: lowest layer, then junctions, then the cube
+    with the most neighbours in the finished structure. A junction has neighbours
+    on both axes, so once any of them is down it can never be gripped."""
     def on_axis(cell, axis):
-        return sum((cell[0]+dx, cell[1]+dy, cell[2]+dz) in remaining
+        return sum((cell[0]+dx, cell[1]+dy, cell[2]+dz) in cells
                    for dx, dy, dz in NEIGHBOURS[axis])
 
-    degree = {cell: on_axis(cell, 'x') + on_axis(cell, 'y') for cell in remaining}
-    # A junction has neighbours on both axes in the finished structure, so once
-    # any of them is down it can never be gripped. Junctions go first, while the
-    # cells around them are still empty.
+    degree = {cell: on_axis(cell, 'x') + on_axis(cell, 'y') for cell in cells}
     junction = {cell: bool(on_axis(cell, 'x')) and bool(on_axis(cell, 'y'))
-                for cell in remaining}
-    placed, steps = set(), []
-    while remaining:
-        ready = []
-        for cell in remaining:
-            if cell[2] and (cell[0], cell[1], cell[2]-1) not in placed:
-                continue  # support is not there yet
-            axis = free_axis(cell, placed)
-            if axis:
-                ready.append((cell, axis))
+                for cell in cells}
+    return lambda ca: (ca[0][2], not junction[ca[0]], -degree[ca[0]], ca[0][1], ca[0][0])
+
+
+def _ready(cells, placed):
+    """Cells that can be placed next, with the axis the fingers would close along."""
+    out = []
+    for cell in cells:
+        if cell in placed:
+            continue
+        if cell[2] and (cell[0], cell[1], cell[2]-1) not in placed:
+            continue                       # support is not there yet
+        axis = free_axis(cell, placed)
+        if axis:
+            out.append((cell, axis))
+    return out
+
+
+def _greedy(cells, rank, first=()):
+    """Take the highest-ranked placeable cube at every step, never reconsidering.
+
+    Cells in `first` jump the queue as soon as their support is down. That is what
+    makes the retry in `sequence` work: a cube stranded by the plain ranking is
+    usually placeable if it simply goes earlier.
+    """
+    first, placed, order = set(first), set(), []
+    while len(order) < len(cells):
+        ready = _ready(cells, placed)
         if not ready:
-            return steps, sorted(remaining)
-        cell, axis = min(ready, key=lambda ca: (ca[0][2], not junction[ca[0]],
-                                                -degree[ca[0]], ca[0][1], ca[0][0]))
-        steps.append((remaining.pop(cell), axis))
+            return order, sorted(set(cells) - placed)
+        urgent = [ca for ca in ready if ca[0] in first]
+        cell, axis = min(urgent or ready, key=rank)
+        order.append((cell, axis))
         placed.add(cell)
-    return steps, []
+    return order, []
+
+
+def sequence(voxels, retries=RETRIES):
+    """Bottom-up order respecting direct support and finger clearance.
+
+    Ranked greedy first, because it is fast and usually right. Greedy is not
+    complete, though: a corner with one neighbour on each axis can be walled in by
+    two junctions that both outranked it, and it is then reported as having no
+    clearance even though placing it first would have worked. Dropping a cube that
+    was actually placeable quietly degrades every design, so a failed order is
+    retried with the stranded cubes moved to the front, up to `retries` times.
+
+    Returns (steps, blocked) where steps is a list of (voxel, axis). A non-empty
+    `blocked` means no attempt found an order — evidence that the structure is
+    impractical, not a proof that no order exists.
+    """
+    cells = {v.cell: v for v in voxels}
+    rank = _ranking(cells)
+    order, blocked = _greedy(cells, rank)
+    forced = set()
+    for _ in range(retries):
+        if not blocked:
+            break
+        if forced.issuperset(blocked):
+            break                          # the same cubes strand again; give up
+        forced |= set(blocked)
+        order, blocked = _greedy(cells, rank, forced)
+    return [(cells[cell], axis) for cell, axis in order], blocked
 
 
 def clearance_problems(voxels):

@@ -132,19 +132,31 @@ def _client():
                          'Use --offline to run the checker without model access.') from exc
 
 
-def propose(prompt, limits=None, attempts=3, model=MODEL, structure_id=None, verbose=False):
+def system_prompt(limits=None, guidance=''):
+    """The rules the model is asked to design under, for a given set of limits."""
+    limits = {**DEFAULT_LIMITS, **(limits or {})}
+    grid = limits.get('grid') or (99, 99)
+    text = SYSTEM.format(colors=', '.join(sorted(COLORS)), max_cubes=limits['max_cubes'],
+                         max_layers=limits['max_layers'], grid_w=grid[0], grid_h=grid[1],
+                         grid_x=grid[0]-1, grid_y=grid[1]-1)
+    return f'{text}\n\n{guidance}' if guidance else text
+
+
+def propose(prompt, limits=None, attempts=3, model=MODEL, structure_id=None, verbose=False,
+            attachments=None, guidance=''):
     """Ask the model for a structure, re-asking with the checker's problems.
 
+    `attachments` are extra content blocks for the first user message, which is
+    how an image reaches the model; `guidance` is appended to the system rules.
     Returns (structure, report, transcript). The structure is returned even when
     it fails, so the caller can show why it was rejected.
     """
     limits = {**DEFAULT_LIMITS, **(limits or {})}
     client = _client()
-    grid = limits.get('grid') or (99, 99)
-    system = SYSTEM.format(colors=', '.join(sorted(COLORS)), max_cubes=limits['max_cubes'],
-                           max_layers=limits['max_layers'], grid_w=grid[0], grid_h=grid[1],
-                           grid_x=grid[0]-1, grid_y=grid[1]-1)
-    messages = [{'role': 'user', 'content': f'Design a voxel structure: {prompt}'}]
+    system = system_prompt(limits, guidance)
+    messages = [{'role': 'user',
+                 'content': [{'type': 'text', 'text': f'Design a voxel structure: {prompt}'}]
+                            + list(attachments or [])}]
     transcript, structure, report = [], None, None
     for attempt in range(1, attempts+1):
         response = client.messages.create(
