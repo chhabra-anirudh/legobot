@@ -19,8 +19,15 @@ URDF = HERE / 'chopped_urdf_v2/urdf/chopped_urdf_v2.urdf'
 
 
 class Arm:
-    """Forward kinematics plus joint-limited damped least-squares IK."""
-    def __init__(self):
+    """Forward kinematics plus joint-limited damped least-squares IK.
+
+    `limits` optionally narrows the URDF's joint limits to the robot's own
+    calibrated ranges (see sim/robot_limits.json). The URDF is permissive: on
+    several joints the real arm reaches considerably less, so a solution that is
+    valid here can be silently clamped by the robot. Pass the file whenever a
+    trajectory is meant for hardware.
+    """
+    def __init__(self, limits=None):
         _, joints, _ = parse_urdf(str(URDF))
         by_child = {j['child']: j for j in joints}
         chain, link = [], 'left_eef'
@@ -33,6 +40,13 @@ class Arm:
         self.names = [j['name'] for j in self.active]
         self.lo = np.array([j['lower'] for j in self.active])
         self.hi = np.array([j['upper'] for j in self.active])
+        if limits:
+            data = json.loads(Path(limits).read_text())
+            if list(data['joint_names']) != self.names:
+                raise ValueError(f'{limits} is for joints {data["joint_names"]}, '
+                                 f'this chain is {self.names}')
+            self.lo = np.maximum(self.lo, np.asarray(data['lower'], dtype=float))
+            self.hi = np.minimum(self.hi, np.asarray(data['upper'], dtype=float))
 
     def fk(self, q):
         values = dict(zip(self.names, q))

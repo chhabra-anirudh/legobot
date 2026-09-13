@@ -15,6 +15,7 @@ SIM = Path(__file__).resolve().parent.parent/'sim'
 if str(SIM) not in sys.path:
     sys.path.insert(0, str(SIM))
 from cube_colors import COLORS  # noqa: E402  single source of truth for colors
+from placement import sequence  # noqa: E402
 
 SCHEMA_VERSION = 1
 # Nominal cube size confirmed by the user. Measured stack pitch is a separate
@@ -22,7 +23,10 @@ SCHEMA_VERSION = 1
 NOMINAL_CUBE_SIZE_M = .0254
 # Provisional limits. Real inventory, reachable footprint, and a validated layer
 # count are not confirmed; override them explicitly per build.
-DEFAULT_LIMITS = {'max_cubes': 64, 'max_layers': 4, 'max_footprint': 12}
+# 'grid' is the reachable build area in cells, measured from the arm in
+# sim/build_structure.py. None means unbounded.
+DEFAULT_LIMITS = {'max_cubes': 64, 'max_layers': 4, 'max_footprint': 12,
+                  'grid': None}
 
 
 @dataclass(frozen=True)
@@ -140,6 +144,9 @@ def validate(structure, limits=None, inventory=None):
         if v.z < 0:
             add('negative_layer', 'layers below the build surface do not exist', v.cell)
             continue
+        grid = limits.get('grid')
+        if grid and not (0 <= v.x < grid[0] and 0 <= v.y < grid[1]):
+            add('out_of_grid', f'outside the reachable {grid[0]}x{grid[1]} build area', v.cell)
         if v.color not in COLORS:
             add('unknown_color', f'unsupported color {v.color!r}; '
                                  f'choose from {sorted(COLORS)}', v.cell)
@@ -187,6 +194,13 @@ def validate(structure, limits=None, inventory=None):
             if cell in occupied and cell not in seen:
                 seen.add(cell)
                 stack.append(cell)
+    # Finger clearance: can the cubes actually be placed one at a time?
+    blocked = sequence(structure.voxels)[1]
+    for cell in blocked:
+        add('no_clearance', 'the gripper cannot reach this cell without hitting a placed '
+                            'cube; a region two or more cells wide in both x and y cannot '
+                            'be completed', cell)
+
     if len(seen) != len(occupied):
         stranded = len(occupied)-len(seen)
         add('disconnected', f'{stranded} cube{"s" if stranded > 1 else ""} '
@@ -195,13 +209,16 @@ def validate(structure, limits=None, inventory=None):
 
 
 def build_order(structure):
-    """Deterministic bottom-up placement order.
+    """Placement order that respects support and finger clearance.
 
-    This is an ordering only. It does not produce tool poses, check finger
-    clearance, or verify that the arm can reach any cell; that is the executor's
-    job and is not implemented yet.
+    An ordering only: it does not produce tool poses or verify that the arm can
+    reach any cell. `sim/build_structure.py` does that.
     """
-    return sorted(structure.voxels, key=lambda v: (v.z, v.y, v.x))
+    steps, blocked = sequence(structure.voxels)
+    if blocked:
+        raise ValueError(f'no placement order found; {len(blocked)} cells have no finger '
+                         f'clearance, starting at {blocked[0]}')
+    return [voxel for voxel, _ in steps]
 
 
 def load(path):

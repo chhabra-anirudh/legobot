@@ -1,0 +1,31 @@
+{
+  "source": "bbos arm_left ranges.calibration.json via q2urdf",
+  "note": "URDF units: lj0 metres, lj1..lj6 radians. Intersected with the URDF limits. The gripper is deliberately unlimited on the robot and is omitted.",
+  "joint_names": [
+    "lj0",
+    "lj1",
+    "lj2",
+    "lj3",
+    "lj4",
+    "lj5",
+    "lj6"
+  ],
+  "lower": [
+    -1.03044,
+    -1.545826,
+    -1.032848,
+    -0.712896,
+    -1.988039,
+    -1.576165,
+    -1.576165
+  ],
+  "upper": [
+    -0.0,
+    1.991534,
+    1.568784,
+    2.094395,
+    1.988039,
+    1.576165,
+    1.576165
+  ]
+}

@@ -1,280 +1,106 @@
 {
   "schema_version": 1,
   "structure_id": "a-simple-dog-1",
-  "name": "Dog (side silhouette)",
+  "name": "Dog in Profile",
   "cube_size_m": 0.0254,
   "source": "claude-opus-5",
   "prompt": "a simple dog",
   "voxels": [
     {
-      "x": 2,
-      "y": 3,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 3,
-      "y": 3,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 4,
-      "y": 3,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 5,
-      "y": 3,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 6,
-      "y": 3,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 7,
-      "y": 3,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 8,
-      "y": 3,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 2,
-      "y": 4,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 3,
-      "y": 4,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 4,
-      "y": 4,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 5,
-      "y": 4,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 6,
-      "y": 4,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 7,
-      "y": 4,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 8,
-      "y": 4,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 2,
-      "y": 5,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 3,
-      "y": 5,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 4,
-      "y": 5,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 5,
-      "y": 5,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 6,
-      "y": 5,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 7,
-      "y": 5,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 8,
-      "y": 5,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 9,
-      "y": 5,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 10,
-      "y": 5,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 9,
-      "y": 6,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 10,
-      "y": 6,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 9,
-      "y": 7,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 10,
-      "y": 7,
-      "z": 0,
-      "color": "white"
-    },
-    {
-      "x": 9,
-      "y": 8,
-      "z": 0,
-      "color": "yellow"
-    },
-    {
-      "x": 11,
-      "y": 5,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 11,
-      "y": 6,
-      "z": 0,
-      "color": "red"
-    },
-    {
-      "x": 2,
-      "y": 2,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 3,
-      "y": 2,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 2,
-      "y": 1,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 3,
-      "y": 1,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 2,
+      "x": 0,
       "y": 0,
       "z": 0,
       "color": "white"
     },
     {
-      "x": 3,
-      "y": 0,
-      "z": 0,
-      "color": "white"
-    },
-    {
-      "x": 7,
-      "y": 2,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 8,
-      "y": 2,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 7,
+      "x": 0,
       "y": 1,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 8,
-      "y": 1,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 7,
-      "y": 0,
-      "z": 0,
-      "color": "white"
-    },
-    {
-      "x": 8,
-      "y": 0,
       "z": 0,
       "color": "white"
     },
     {
       "x": 1,
-      "y": 5,
+      "y": 1,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 1,
+      "y": 2,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 2,
+      "y": 2,
+      "z": 0,
+      "color": "orange"
+    },
+    {
+      "x": 3,
+      "y": 2,
+      "z": 0,
+      "color": "orange"
+    },
+    {
+      "x": 4,
+      "y": 2,
+      "z": 0,
+      "color": "orange"
+    },
+    {
+      "x": 5,
+      "y": 2,
+      "z": 0,
+      "color": "orange"
+    },
+    {
+      "x": 6,
+      "y": 2,
+      "z": 0,
+      "color": "orange"
+    },
+    {
+      "x": 7,
+      "y": 2,
       "z": 0,
       "color": "yellow"
     },
     {
-      "x": 1,
-      "y": 6,
+      "x": 3,
+      "y": 1,
       "z": 0,
-      "color": "yellow"
+      "color": "orange"
     },
     {
-      "x": 1,
-      "y": 7,
+      "x": 3,
+      "y": 0,
       "z": 0,
-      "color": "yellow"
+      "color": "orange"
+    },
+    {
+      "x": 2,
+      "y": 0,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 6,
+      "y": 1,
+      "z": 0,
+      "color": "orange"
+    },
+    {
+      "x": 6,
+      "y": 0,
+      "z": 0,
+      "color": "orange"
+    },
+    {
+      "x": 7,
+      "y": 0,
+      "z": 0,
+      "color": "white"
     }
   ]
 }

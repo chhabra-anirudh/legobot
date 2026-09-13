@@ -27,16 +27,29 @@ Hard rules, enforced by a deterministic checker after you answer:
   rejected. A cube resting only on diagonal or side neighbours is rejected.
 - One connected object: every cube must reach every other through shared faces.
 - Colors must come from this palette: {colors}.
-- At most {max_cubes} cubes, {max_layers} layers, and a {max_footprint} by
-  {max_footprint} footprint.
+- At most {max_cubes} cubes and {max_layers} layers.
+- The reachable build area is a grid {grid_w} cells wide (x from 0 to {grid_x}) by
+  {grid_h} cells deep (y from 0 to {grid_y}). Every cube must be inside it. This is
+  the arm's measured reach, not a stylistic limit — a design that spills outside it
+  cannot be built at all.
 
-Because overhangs are rejected, a standing figure with legs and a raised body is
-not buildable. The reliable way to make a recognisable subject is a flat
-silhouette lying on the table at z=0, read from above, optionally with a second
-layer that sits fully on top of the first.
+- Finger clearance: the gripper holds a cube by two opposite faces from above, so
+  each pad needs the whole neighbouring cell. A cube can only be placed while both
+  cells along one horizontal axis are still empty. The consequence is strict: any
+  solid region two or more cells wide in BOTH x and y is impossible to finish,
+  because the cube placed last in it is boxed in on every side.
 
-Make the silhouette recognisable as the requested subject. Use the grid
-generously rather than reducing the subject to a few cubes."""
+Two rules therefore shape every design. Overhangs are rejected, so a standing
+figure with legs and a raised body is not buildable. Solid areas are rejected, so
+filled-in shapes are not buildable either.
+
+What works is line art: a path of cubes ONE CELL WIDE, lying flat on the table at
+z=0, drawn as an outline of the subject. Diagonal steps are fine as long as each
+cube shares a face with the next. Avoid placing two cubes side by side unless the
+line genuinely runs that way, and never fill an interior.
+
+Draw the requested subject as a recognisable one-cube-wide outline. Use the grid
+generously; a bigger outline reads better than a few cubes."""
 
 SCHEMA = {
     'type': 'object',
@@ -64,14 +77,16 @@ SCHEMA = {
 # are not model output and are labelled 'offline_library' wherever they appear.
 LIBRARY = {
     'dog': ("""
-........OO.
-.......OOOO
-W......OOOO
-OOOOOOOOO..
-.OOOOOOOO..
-.O..OO..O..
-.W..WW..W..
-""", 'flat dog silhouette, side profile facing right'),
+.......OOOOO
+.......O...O
+OOOOOOOO...R
+O..........O
+O.......OOOO
+OOOOOOOO....
+..O....O....
+..O....O....
+..W....W....
+""", 'one-cube-wide dog outline, side profile facing right'),
 }
 GLYPH_COLORS = {'O': 'orange', 'W': 'white', 'R': 'red', 'G': 'green', 'B': 'blue',
                 'Y': 'yellow'}
@@ -125,7 +140,10 @@ def propose(prompt, limits=None, attempts=3, model=MODEL, structure_id=None, ver
     """
     limits = {**DEFAULT_LIMITS, **(limits or {})}
     client = _client()
-    system = SYSTEM.format(colors=', '.join(sorted(COLORS)), **limits)
+    grid = limits.get('grid') or (99, 99)
+    system = SYSTEM.format(colors=', '.join(sorted(COLORS)), max_cubes=limits['max_cubes'],
+                           max_layers=limits['max_layers'], grid_w=grid[0], grid_h=grid[1],
+                           grid_x=grid[0]-1, grid_y=grid[1]-1)
     messages = [{'role': 'user', 'content': f'Design a voxel structure: {prompt}'}]
     transcript, structure, report = [], None, None
     for attempt in range(1, attempts+1):
@@ -174,11 +192,14 @@ def main(argv=None):
     parser.add_argument('--attempts', type=int, default=3)
     parser.add_argument('--max-cubes', type=int, default=DEFAULT_LIMITS['max_cubes'])
     parser.add_argument('--max-layers', type=int, default=DEFAULT_LIMITS['max_layers'])
+    parser.add_argument('--grid', type=int, nargs=2, default=[7, 5], metavar=('W', 'H'),
+                        help='reachable build area in cells')
     parser.add_argument('--output', help='write the accepted structure JSON here')
     parser.add_argument('--order', action='store_true', help='print the bottom-up build order')
     args = parser.parse_args(argv)
 
-    limits = {**DEFAULT_LIMITS, 'max_cubes': args.max_cubes, 'max_layers': args.max_layers}
+    limits = {**DEFAULT_LIMITS, 'max_cubes': args.max_cubes,
+              'max_layers': args.max_layers, 'grid': tuple(args.grid)}
     if args.offline:
         structure = offline(args.prompt)
         report = validate(structure, limits)
