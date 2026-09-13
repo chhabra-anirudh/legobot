@@ -256,7 +256,7 @@ class ImagePipelineTests(unittest.TestCase):
                         [str(CAT_IMAGE), '--request', str(path), '--grid', '12', '8'])
         self.assertEqual(code, 0)
         request = json.loads(path.read_text())
-        self.assertEqual(request['grid'], [12, 8])
+        self.assertEqual(request['limits']['grid'], [12, 8])
         self.assertIn('Direct support only', request['system'])
         self.assertIn('O', request['downsampled_grid'])
         self.assertIn('voxels', request['response_schema']['properties'])

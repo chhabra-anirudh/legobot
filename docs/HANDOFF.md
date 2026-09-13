@@ -8,7 +8,7 @@ start new work from `main`, not from a feature branch. Individual owners are una
 recipe, hardware calibration numbers, the bbos interface reference, and the traps.
 This file is the running log.
 
-**Newest section is [A picture to a simulated build](#a-picture-to-a-simulated-build-2026-09-13)**. For hardware, the current
+**Newest section is [One command: description to simulated build](#one-command-description-to-simulated-build-2026-09-13)**. For hardware, the current
 section is [First hardware execution](#first-hardware-execution-the-build-trajectory-on-the-real-arm-2026-09-12) — the arm has been driven from the simulated
 plan. Earlier sections describe older states and are kept for history; where they
 disagree, the newer section is current.
@@ -49,10 +49,13 @@ contact physics and its nominal release fix are now integrated into local `main`
 - **Executor:** `sim/build_structure.py` turns a checked structure into staged
   cubes, placement order, tool yaws, calibrated coordinates, a joint trajectory,
   and an animation, gated on the measured reach map.
+- **One-command demo:** `build_from_description.py` runs description → design →
+  checks → simulated build, with `--offline` and `--request`/`--ingest` paths for
+  when there is no API key. See [the section below](#one-command-description-to-simulated-build-2026-09-13).
 
 ## Latest verification and remaining limits
 
-All **41 sim tests and 52 compiler tests pass** with physics dependencies
+All **52 sim tests and 52 compiler tests pass** with physics dependencies
 installed (Pillow is additionally needed for the image tests; they skip without it). The kinematic plan now validates **409** frames: `tool_grasp_point_m`
 gained the 18 mm X offset so the assembly grasps where the foam pads actually
 meet the cube, instead of putting the nominal tool origin over the cube centre
@@ -97,6 +100,9 @@ python3 -m venv .venv
 .venv/bin/python compiler/image_to_structure.py compiler/examples/images/cat.png \
     --trace --grid 12 8 --output outputs/cat.json
 .venv/bin/python sim/build_structure.py compiler/examples/cat.json --check
+
+# The whole demo in one command (add --check to plan without a viewer):
+.venv/bin/python build_from_description.py "a simple dog" --offline
 ```
 
 CoACD is only needed for asset regeneration (`requirements-collision.txt`), not
@@ -124,6 +130,65 @@ normal execution. See [CONTACT_SIM.md](CONTACT_SIM.md) and
 slip, then add failure-aware transitions. Do not train on perfect-state
 diagnostic traces unchanged or call the old idealized replay a physical grasp.
 Assume no robot access until confirmed; hardware work need not block simulation.
+
+## One command: description to simulated build (2026-09-13)
+
+Offline work, on `main`. **This is the demo path**, agreed with the user: the user
+describes what they want, a model turns that into voxels, the checks decide whether
+it is buildable, and the arm places coloured cubes in simulation.
+
+```sh
+.venv/bin/python build_from_description.py "a small house"            # needs a key
+.venv/bin/python build_from_description.py "a simple dog" --offline   # no model
+.venv/bin/python build_from_description.py "a small house" --request outputs/ask.json
+.venv/bin/python build_from_description.py "a small house" \
+    --ingest outputs/reply.json --source "<what answered it>" --save outputs/house.rrd
+```
+
+`build_from_description.py` (repository root) runs the four stages and prints each
+one: description and limits, the design and its source, the deterministic checks
+and preview, then `sim/build_structure.py` planning and animating the build. It
+exits non-zero without building anything if the structure is rejected, and passes
+`--origin`, `--save`, `--export-trajectory`, and `--check` through to the planner.
+
+`compiler/request.py` is new and shared with the picture path: it writes the design
+request (rules, limits, response schema) and reads a reply back under a
+caller-supplied `--source`. Three ways to get a design, and the structure file
+always records which was used — `offline_library`, a model id, or whatever the
+caller stated. **No source is ever invented**, and `--ingest` refuses to run
+without one.
+
+### Defaults are measured, not chosen
+
+At the 0.5 m table: a fully occupied **12x9** build area still has 19 valid
+origins in the reach map (12x8 has 30; 12x12 has none), and up to **48** cubes find
+isolated staging slots beside the build. Defaults are a 12x9 grid and a 40-cube
+budget, leaving margin for calibration error. Re-run `sim/reach_map.py --table <h>`
+after the table moves; `sim/build_structure.py <structure> --list-origins` checks a
+specific structure.
+
+A design that overflows the grid is cropped to it by default, reported as
+`dropped N: outside the build grid`; with `--no-simplify` it is rejected instead,
+and the error names the area the design actually needs.
+
+### Verified
+
+New example `compiler/examples/house.json`: from the description "a small house",
+answered in-session by `claude-opus-5-medium` (recorded as such in `source` — this
+was **not** an API call by the pipeline, and no API has yet been called with
+credentials). 40 cubes, one layer, **no simplification needed**, planned as
+**3991** joint-limited poses at an origin chosen from the reach map, and the Rerun
+recording was generated. The hand-authored dog also builds: 37 cubes, 3799 poses.
+
+**52 sim tests** (41 before) and **52 compiler tests** pass. `sim/test_pipeline.py`
+is new and covers the one-command path: a reply is checked, planned, and saved with
+its stated source; a malformed reply fails loudly; an unbuildable design is reduced
+with the reduction reported; a design that stays rejected builds nothing and leaves
+no structure file behind; the exported trajectory matches the planned poses.
+
+Still compiler and kinematic simulation only. Attachment is idealized, so a
+finished build here means the design satisfies the stated rules — not that the arm
+can place 40 cubes in a row.
 
 ## A picture to a simulated build (2026-09-13)
 

@@ -8,6 +8,32 @@ planned.
 [Current status and next tasks](docs/HANDOFF.md) · [Build plan](docs/BUILD_PLAN.md) ·
 [Contributing](CONTRIBUTING.md) · [Gripper calibration](docs/GRIPPER_CALIBRATION.md)
 
+## Describe it, watch it built
+
+```sh
+.venv/bin/python build_from_description.py "a small house"
+```
+
+`description -> LLM -> voxel structure -> deterministic checks -> simulated build`.
+One command: it asks the model for a design, checks it (support, connectivity,
+finger clearance, colours, budgets, reach), reduces it if it cannot be built and
+says what it changed, then stages coloured cubes on the table and animates the arm
+placing every one of them. Select the `simulation` timeline in Rerun and press Play.
+
+Without `ANTHROPIC_API_KEY`, the same command runs two other ways — hand-authored
+shapes with `--offline`, or `--request`/`--ingest` so another model or an agent
+answers the design request. The structure file always records which one produced it.
+
+```sh
+.venv/bin/python build_from_description.py "a simple dog" --offline --save outputs/dog.rrd
+.venv/bin/python build_from_description.py "a rocket" --request outputs/ask.json
+.venv/bin/python build_from_description.py "a rocket" --ingest outputs/reply.json \
+    --source "<what answered it>"
+```
+
+The simulated build is kinematics with idealized attachment: finishing here means
+the design satisfies the stated rules, not that the real arm can place 40 cubes.
+
 ## What works today
 
 A kinematic simulation stacks three cubes using the supplied robot URDF, with
@@ -48,7 +74,7 @@ Edit `sim/assembly_config.json` to change the workspace and provisional grasp
 settings. See [simulation documentation](sim/README.md) for the coordinate
 conventions and learning walkthrough. These scripts do not command the real robot.
 
-## Picture to a simulated build
+## From a picture instead of a description
 
 ```sh
 .venv/bin/python -m pip install -r requirements-llm.txt
@@ -57,16 +83,19 @@ conventions and learning walkthrough. These scripts do not command the real robo
 .venv/bin/python sim/build_structure.py outputs/cat.json --save outputs/cat.rrd
 ```
 
-Drop `--trace` to send the picture to a vision model instead. The cached result of
-doing that by hand is `compiler/examples/cat.json`: 36 cubes, which
-`sim/build_structure.py` plans as 3653 joint-limited poses.
+Drop `--trace` to send the picture to a vision model instead. A picture is
+downsampled onto the build grid and reduced to buildable line art, with every cube
+dropped or added reported. Cached results: `compiler/examples/cat.json` (36 cubes,
+from a picture) and `compiler/examples/house.json` (40 cubes, from the description
+"a small house"), which plan as 3653 and 3991 joint-limited poses.
 
 ## Layout
 
+- `build_from_description.py`: the one-command demo — description to simulated build.
 - `docs/BUILD_PLAN.md`: agreed working proposal, milestones, and technical caveats.
 - `docs/HANDOFF.md`: current implementation, task ownership, verification, blockers.
 - `sim/`: simulation scripts, tests, configuration, and supplied URDF/meshes.
-- `compiler/`: prompt to voxel structure, deterministic checks, and examples.
+- `compiler/`: prompt or picture to voxel structure, deterministic checks, examples.
 - `robot/`: read-only arm probe, pose teaching, and the trajectory bridge. These
   run on the robot with `uv run`, not on the workstation.
 - `AGENTS.md`: handoff and collaboration instructions for coding agents.

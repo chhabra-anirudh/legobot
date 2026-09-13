@@ -164,10 +164,12 @@ checks, with a re-checked repair round when a proposal fails. An image is
 downsampled onto the build grid and reduced to buildable line art, with every
 dropped or added cube reported. `sim/build_structure.py` is the executor:
 calibrated build coordinates, tool yaw per placement, reach-map gating, placement
-order, staging layout, joint trajectory export. Examples: `dog.json` (16 cubes,
-prompt), `cat.json` (36 cubes, picture), `dog-floating-rejected.json` (negative
-control). **Not implemented:** full-path collision validation against the robot
-model, and a confirmed per-colour inventory.
+order, staging layout, joint trajectory export. `build_from_description.py` at the
+repository root runs the agreed demo path end to end in one command: description →
+design → checks → simulated build. Examples: `dog.json` (16 cubes, prompt),
+`house.json` (40 cubes, description), `cat.json` (36 cubes, picture),
+`dog-floating-rejected.json` (negative control). **Not implemented:** full-path
+collision validation against the robot model, and a confirmed per-colour inventory.
 
 ### 3. Contact simulation and demonstration collection
 

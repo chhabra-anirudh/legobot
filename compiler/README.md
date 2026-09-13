@@ -12,6 +12,10 @@ came back well formed. Finger clearance and placement order are checked here;
 robot tool poses and reachability are decided by `sim/build_structure.py`, which
 takes the structure files this directory produces.
 
+For the whole demo in one command — description, checks, and the simulated build —
+use `build_from_description.py` at the repository root. This directory is the
+compiler half of it.
+
 ## Run it
 
 ```sh
@@ -75,6 +79,9 @@ Three paths, and each records honestly which one produced the structure:
 schema) for something else to answer; `--ingest REPLY --source LABEL` reads the
 answer back and runs the identical checks on it. That exists so an agent can act
 as the vision model without the pipeline pretending it called an API.
+
+`request.py` holds that plumbing, and the prompt path in `build_from_description.py`
+uses the same three options with the same file format.
 
 ## What gets checked
 
@@ -140,6 +147,25 @@ and `+y` up. Its `source` records that it came from a vision reply produced by a
 interactive `claude-opus-5-medium` agent session rather than by an API call from
 this pipeline, and its `provenance` records the image path, the image's SHA-256,
 and the grid it was designed on.
+
+`examples/house.json` — 40 cubes, one layer, from the **description** "a small
+house" rather than from a picture, answered by an interactive agent session:
+
+```
+..RRRRR..
+.RR...RR.
+.R.....R.
+WWWWWWWWW
+W.......W
+W......YW
+W...B...W
+W...B...W
+WWWWWWWWW
+```
+
+Hollow white walls, a stepped red roof, a blue door, a yellow window. It is the
+largest example that plans cleanly: 40 cubes, 3991 joint-limited poses, and 48 is
+the measured limit on isolated staging slots beside a build at the 0.5 m table.
 
 `examples/dog-floating-rejected.json` — the dog with one cube lifted to `z=2` and
 one cube set apart. Hand-edited as a negative control, and labelled as such in its

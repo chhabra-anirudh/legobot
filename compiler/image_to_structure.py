@@ -22,14 +22,14 @@ the simplification is printed and stored in `provenance`, never hidden.
 """
 import argparse
 import base64
-import json
 import mimetypes
 import sys
 from pathlib import Path
 
 import imaging
+import request as vision_request
 import simplify
-from generate import MODEL, SCHEMA, propose, system_prompt
+from generate import MODEL, propose
 from preview import render
 from schema import DEFAULT_LIMITS, Structure, Voxel, build_order, save, validate
 
@@ -85,23 +85,11 @@ def trace(sheet, limits, structure_id, subject=''):
 
 
 def from_reply(reply, sheet, limits, structure_id, source, subject='', reduce=True):
-    """Turn a model reply (`name`, `reasoning`, `voxels`) into a checked structure."""
-    if not isinstance(reply, dict) or 'voxels' not in reply:
-        raise SystemExit('the reply must be a JSON object with a "voxels" list, '
-                         'matching the schema printed by --request')
-    cells = {(v['x'], v['y'], v['z']): v['color'] for v in reply['voxels']}
-    actions = []
-    if reduce:
-        cells, actions = simplify.make_buildable(cells, grid=limits.get('grid'),
-                                                 keep_outline=False)
-    provenance = {**sheet.provenance(), 'mode': 'vision_reply',
-                  'reasoning': reply.get('reasoning', ''),
-                  'simplified': simplify.summary(actions)}
-    structure = Structure(structure_id=structure_id,
-                          name=reply.get('name') or subject or 'structure',
-                          voxels=cells_to_voxels(cells), source=source, prompt=subject,
-                          provenance=provenance)
-    return structure, actions
+    """Turn a vision reply (`name`, `reasoning`, `voxels`) into a checked structure."""
+    return vision_request.structure(
+        reply, structure_id, source, prompt=subject,
+        provenance={**sheet.provenance(), 'mode': 'vision_reply'},
+        grid=limits.get('grid'), reduce=reduce)
 
 
 def main(argv=None):
@@ -156,16 +144,12 @@ def main(argv=None):
 
     stem = Path(args.image).stem.lower().replace(' ', '-')[:24]
     if args.request:
-        request = {'system': system_prompt(limits, GUIDANCE),
-                   'user_text': f'Design a voxel structure from this picture'
-                                + (f': {args.subject}' if args.subject else '.'),
-                   'image_path': str(Path(args.image).resolve()),
-                   'downsampled_grid': sheet.ascii(),
-                   'grid': [sheet.width, sheet.height],
-                   'response_schema': SCHEMA,
-                   'reply_with': 'a JSON object matching response_schema, saved to a file '
-                                 'and passed back with --ingest FILE --source <model id>'}
-        Path(args.request).write_text(json.dumps(request, indent=2)+'\n')
+        vision_request.write(
+            args.request,
+            'Design a voxel structure from this picture'
+            + (f': {args.subject}' if args.subject else '.'), limits, GUIDANCE,
+            extra={'image_path': str(Path(args.image).resolve()),
+                   'downsampled_grid': sheet.ascii()})
         print(f'\nwrote {args.request}: answer it, then re-run with '
               f'--ingest <reply.json> --source <what answered it>')
         return 0
@@ -175,7 +159,7 @@ def main(argv=None):
     elif args.ingest:
         if not args.source.strip():
             parser.error('--ingest needs --source: record what produced the reply')
-        structure, actions = from_reply(json.loads(Path(args.ingest).read_text()), sheet,
+        structure, actions = from_reply(vision_request.read(args.ingest), sheet,
                                         limits, f'{stem}-vision', args.source.strip(),
                                         args.subject, reduce=not args.no_simplify)
     else:
