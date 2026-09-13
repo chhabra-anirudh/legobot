@@ -167,6 +167,25 @@ Hollow white walls, a stepped red roof, a blue door, a yellow window. It is the
 largest example that plans cleanly: 40 cubes, 3991 joint-limited poses, and 48 is
 the measured limit on isolated staging slots beside a build at the 0.5 m table.
 
+`examples/rocket.json` — 26 cubes from the description "a rocket", the same way:
+
+```
+...R...
+..RRR..
+..W.W..
+..WBW..
+..W.W..
+O.W.W.O
+OOWWWOO
+...O...
+..YYY..
+```
+
+A red cone, hollow white hull, orange fins, a yellow flame, and a blue porthole at
+`(5,5)` — an interior cube that is still placeable because both of its
+`y` neighbours stay empty, which is the clearance rule working in the design's
+favour rather than against it. 2687 joint-limited poses.
+
 `examples/dog-floating-rejected.json` — the dog with one cube lifted to `z=2` and
 one cube set apart. Hand-edited as a negative control, and labelled as such in its
 `source` field. It is rejected for `unsupported`, `disconnected`, and

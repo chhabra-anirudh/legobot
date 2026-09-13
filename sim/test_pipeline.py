@@ -127,12 +127,19 @@ class PipelineTests(unittest.TestCase):
         self.assertTrue(points)
         self.assertEqual(len(set(len(p) for p in points)), 1)
 
-    def test_the_cached_house_example_still_passes_and_fits_the_grid(self):
-        house = load(ROOT/'compiler'/'examples'/'house.json')
-        report = validate(house, {'grid': (12, 9), 'max_cubes': 40})
-        self.assertTrue(report.ok, report.codes())
-        self.assertEqual(report.counts['cubes'], 40)
-        self.assertNotEqual(house.source, 'offline_library')
+    def test_the_cached_description_examples_pass_and_fit_the_default_grid(self):
+        """house.json and rocket.json are the demo structures; both must keep
+        passing under the defaults this script uses, or the demo breaks silently."""
+        limits = {'grid': (12, 9), 'max_cubes': 40, 'max_layers': 4, 'max_footprint': 12}
+        for name, cubes in [('house.json', 40), ('rocket.json', 26)]:
+            with self.subTest(example=name):
+                structure = load(ROOT/'compiler'/'examples'/name)
+                report = validate(structure, limits)
+                self.assertTrue(report.ok, report.codes())
+                self.assertEqual(report.counts['cubes'], cubes)
+                # These came from a model/agent reply, not the offline library.
+                self.assertNotEqual(structure.source, 'offline_library')
+                self.assertTrue(structure.provenance['reasoning'])
 
 
 if __name__ == '__main__':

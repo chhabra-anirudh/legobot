@@ -178,7 +178,9 @@ and the error names the area the design actually needs.
 
 ### Verified
 
-New example `compiler/examples/house.json`: from the description "a small house",
+New examples `compiler/examples/house.json` and `rocket.json` (40 and 26 cubes,
+3991 and 2687 poses). Taking the house as the detailed case: from the description
+"a small house",
 answered in-session by `claude-opus-5-medium` (recorded as such in `source` — this
 was **not** an API call by the pipeline, and no API has yet been called with
 credentials). 40 cubes, one layer, **no simplification needed**, planned as
