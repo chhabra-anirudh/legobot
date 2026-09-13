@@ -38,19 +38,10 @@ from generate import MODEL, offline, propose                     # noqa: E402
 from preview import render                                      # noqa: E402
 from schema import DEFAULT_LIMITS, Voxel, save, validate       # noqa: E402
 
-# Measured, not chosen. A cell is now a **2 inch block**, so it covers four times the
-# table area it did at 25.4 mm. Once the whole reachable disc is probed and the
-# robot's own chassis is excluded, the usable area is a ring around the base, and on
-# the 50.8 mm lattice the largest solid rectangle in front of the robot is 10x3 cells
-# (4x8 is the alternative). The 18x7 that fitted 25.4 mm cubes is gone.
-#
-# Table height barely matters for the footprint: `lj0` is a 1.03 m lift, so lowering
-# the table shifts that joint rather than changing the XY reach — 0.4 m and 0.5 m give
-# the same 542 samples. Height does matter near the top of the travel: at 0.78 m only
-# a single row of six blocks fits. Re-measure with `python sim/reach_map.py --table
-# <h>` and check a structure with `sim/build_structure.py <structure> --list-origins`.
-DEFAULT_GRID = (10, 3)
-DEFAULT_MAX_CUBES = 20          # 24 still stages beside a 10x3 build; 20 leaves room
+# One-inch cube defaults. Actual build/staging feasibility is checked against
+# the current reach map and chassis exclusion for each requested structure.
+DEFAULT_GRID = (12, 9)
+DEFAULT_MAX_CUBES = 40
 
 
 def slug(text):
@@ -89,7 +80,7 @@ def main(argv=None):
         epilog='Stages: describe -> design -> check -> build. See docs/HANDOFF.md.')
     parser.add_argument('description', help='what to build, e.g. "a cat"')
     parser.add_argument('--grid', type=int, nargs=2, default=list(DEFAULT_GRID),
-                        metavar=('W', 'H'), help='build area in cells (default: 12 8, '
+                        metavar=('W', 'H'), help='build area in cells (default: 12 9, '
                                                  'the measured fit at a 0.5 m table)')
     parser.add_argument('--max-cubes', type=int, default=DEFAULT_MAX_CUBES,
                         help='cube budget (default: 40; 48 is the measured staging limit)')

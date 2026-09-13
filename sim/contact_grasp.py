@@ -22,7 +22,7 @@ def quaternion(R):
     return numbers(q)
 
 
-def make_model(friction=.8, mass=.03, geometry="foam_pads", torsional_friction=.001):
+def make_model(friction=.8, mass=.03, geometry="foam_pads", torsional_friction=.001, *, extra_cubes=()):
     """Separate convex hull per finger: intentionally conservative proxies.
 
     The dynamic EEF follows a mocap target through a weld; fingers use URDF hinges.
@@ -122,6 +122,16 @@ def make_model(friction=.8, mass=.03, geometry="foam_pads", torsional_friction=.
     ET.SubElement(cube, 'freejoint', name='cube_free')
     ET.SubElement(cube, 'geom', name='cube_geom', type='box', size='.0127 .0127 .0127', mass=str(mass),
                   friction=f'{friction} {torsional_friction} 0.0001', condim='4', solref='.005 1', rgba='.95 .4 .2 1')
+    # All construction cubes are free bodies; there is no cube attachment.
+    for i, position in enumerate(extra_cubes):
+        position = np.asarray(position, dtype=float)
+        if position.shape != (3,) or not np.all(np.isfinite(position)):
+            raise ValueError('extra cube positions must be finite xyz metres')
+        other = ET.SubElement(world, 'body', name=f'cube_{i+1}', pos=numbers(position))
+        ET.SubElement(other, 'freejoint', name=f'cube_{i+1}_free')
+        ET.SubElement(other, 'geom', name=f'cube_{i+1}_geom', type='box', size='.0127 .0127 .0127',
+                      mass=str(mass), friction=f'{friction} {torsional_friction} 0.0001',
+                      condim='4', solref='.005 1', rgba='.95 .4 .2 1')
     xml = ET.tostring(root, encoding='unicode')
     return mujoco.MjModel.from_xml_string(xml)
 

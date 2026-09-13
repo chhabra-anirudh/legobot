@@ -2,7 +2,7 @@
   "schema_version": 1,
   "structure_id": "a-simple-dog-1",
   "name": "Dog in Profile",
-  "cube_size_m": 0.0508,
+  "cube_size_m": 0.0254,
   "source": "claude-opus-5",
   "prompt": "a simple dog",
   "voxels": [

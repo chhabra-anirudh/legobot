@@ -137,7 +137,7 @@ class PipelineTests(unittest.TestCase):
                                       'max_layers': 4,
                                       'max_footprint': max(pipeline.DEFAULT_GRID)})
         self.assertTrue(report.ok, report.codes())
-        self.assertEqual(report.counts['cubes'], 11)
+        self.assertEqual(report.counts['cubes'], 26)
         self.assertLessEqual(report.counts['footprint'][1], pipeline.DEFAULT_GRID[1])
         # It came from a model/agent reply, not the offline library.
         self.assertNotEqual(structure.source, 'offline_library')

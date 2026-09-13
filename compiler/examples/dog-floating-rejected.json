@@ -2,7 +2,7 @@
   "schema_version": 1,
   "structure_id": "dog-floating-rejected",
   "name": "Dog with a floating cube and an island (intentionally invalid)",
-  "cube_size_m": 0.0508,
+  "cube_size_m": 0.0254,
   "source": "hand_edited_from_claude-opus-5_output",
   "prompt": "negative control: one unsupported cube, one disconnected cube",
   "voxels": [
