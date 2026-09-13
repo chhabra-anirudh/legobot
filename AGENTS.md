@@ -1,6 +1,12 @@
 # Repository working instructions
 
-- Read `docs/HANDOFF.md` first, then the relevant sections of `docs/BUILD_PLAN.md`.
+- Read `docs/ROBOT_SETUP.md` first for setup, hardware facts, and the bbos
+  gotchas, then `docs/HANDOFF.md` for the running log, then the relevant
+  sections of `docs/BUILD_PLAN.md`.
+- The robot's `~/bbapps` is shared with other teams and is not version
+  controlled. This repo is the source of truth; use `robot/deploy.sh` to push
+  scripts to the robot and pull measurements back. Never leave the only copy
+  of a measurement on the robot.
 - Work from this checkout. Files in the parent workspace are historical inputs,
   not the shared source of truth.
 - Keep the handoff current at every completed milestone. Record what is working,

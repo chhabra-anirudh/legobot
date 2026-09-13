@@ -25,13 +25,15 @@ build. Do not present scripted actions as learned behavior.
 
 ## Scope and success criteria
 
-| Level | Target |
-| --- | --- |
-| First milestone | One cube picked, lifted, held, and placed on the real bot |
-| Minimum live demo | A compiler-approved 4–8 cube structure, two layers, fixed supply poses |
-| ML milestone | Behavior-cloned pickup evaluated on held-out randomized poses in contact simulation |
-| Stretch live demo | Learned pickup on hardware; 15–20 cubes and three layers only after repeatable smaller builds |
-| Deferred | RL fine-tuning, dual arms, image-to-action learning, arbitrary piles, unsupported bridges |
+Status marks below are as of 2026-09-12; see [ROBOT_SETUP.md](ROBOT_SETUP.md).
+
+| Level | Target | Status |
+| --- | --- | --- |
+| First milestone | One cube picked, lifted, held, and placed on the real bot | **Partial.** The arm executes the full build motion on hardware with the gripper driven, but on an empty table and with no held-cube signal. The pick itself is unverified |
+| Minimum live demo | A compiler-approved 4–8 cube structure, two layers, fixed supply poses | Not started. A checked 16-cube single-layer structure plans and executes as motion |
+| ML milestone | Behavior-cloned pickup evaluated on held-out randomized poses in contact simulation | Not started |
+| Stretch live demo | Learned pickup on hardware; 15–20 cubes and three layers only after repeatable smaller builds | Not started |
+| Deferred | RL fine-tuning, dual arms, image-to-action learning, arbitrary piles, unsupported bridges | Deferred |
 
 Use towers, stepped structures, and supported letters as initial shapes. An arch
 with an empty space directly below its lintel fails our support rule. A dense
@@ -122,6 +124,17 @@ Measure jaw opening versus angle, finger contact region, tool-to-cube transform,
 and repeatability. Determine what signal verifies a held cube: camera evidence,
 gripper feedback if available, or supervised confirmation during initial tests.
 Do not assume that a commanded close means a successful grasp.
+
+**Status (2026-09-12): hardware access confirmed and the control path is built.**
+The robot API, feedback channels, calibrated joint ranges, and gripper force
+behaviour are identified and written up in [ROBOT_SETUP.md](ROBOT_SETUP.md).
+`robot/build_bridge.py` streams a planned trajectory to the left arm, range-checked
+against the arm's own calibration, and has executed a full 16-cube build path
+twice. Jaw angle was measured against a real cube (0.2301 rad) and replaced the
+guessed animation value. **Not done:** the 20-attempt gate below. Both runs used an
+empty table, and there is still no signal that distinguishes a held cube from an
+empty jaw, so pick attempts cannot yet be scored at all. Building that signal comes
+before running the gate.
 
 Gate: record 20 scripted pick–lift–hold–place attempts and failure causes. An initial
 18/20 target is a development gate, not sufficient evidence for a reliable long
@@ -307,16 +320,26 @@ an authorization or a verified rule set.
 
 ## Immediate next implementation session
 
-1. Verify gripper contact geometry and replace provisional jaw settings with a
-   documented calibration model.
-2. Establish a minimal one-cube contact scene and a grasp-success measurement.
-3. Extend the preconfigured top-down grasp primitive (hover above the cube,
-   vertical descent to the validated half-height grasp, close, vertical lift) into
-   a failure-aware expert with observation/action recording. The primitive exists
-   in `sim/contact_grasp.py`; the frozen training contract does not.
-4. In the compiler workstream, agree on the structure and placement schemas and
-   implement supported two-layer examples against a fake executor.
-5. Train the first behavior-cloning model only once demonstrations reflect a
+Updated 2026-09-12, after the first hardware executions. Ordered.
+
+1. **Add a held-cube signal.** `arm_state.current` is already published and the
+   daemon's J7 current-relief loop holds at a target current; a close that reaches
+   the commanded angle with no current rise means an empty jaw. Without this the
+   system cannot tell a successful pick from a failed one, which blocks the
+   work-package-1 gate, demonstration labelling, and any honest success metric.
+2. **Stage cubes and verify one real pick.** Coordinates are in the exported
+   placement plan under `staging`. Confirm the jaw acquires a cube during the arm's
+   own motion, not just when hand-closed.
+3. **Check build cells against the reach map** in `sim/build_structure.py` and make
+   a working `--origin` the default. An out-of-reach origin currently fails as a
+   bare `IK failed at [...]`.
+4. **Teach a real `table_surface` pose** to replace the set-by-hand 0.5 m table
+   height. Reach is extremely sensitive to it: 0.75 m gives 95 reachable cells and
+   6 valid build origins, 0.5 m gives 246 and 133.
+5. Extend the top-down grasp primitive into a failure-aware expert with
+   observation/action recording. The primitive exists in `sim/contact_grasp.py`;
+   the frozen training contract does not. Depends on 1.
+6. Train the first behavior-cloning model only once demonstrations reflect a
    physically successful grasp.
 
 The source document's visibility-aware color allocation is a useful later polish

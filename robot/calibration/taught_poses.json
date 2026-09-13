@@ -1,0 +1,110 @@
+[
+  {
+    "label": "smoke_test_current_pose",
+    "arm": "arm_left",
+    "recorded_at": "2026-09-12T18:00:56",
+    "joint_names": [
+      "lj0",
+      "lj1",
+      "lj2",
+      "lj3",
+      "lj4",
+      "lj5",
+      "lj6",
+      "left_left_gripper"
+    ],
+    "turns": [
+      1.844258,
+      -0.001153,
+      -0.003342,
+      0.052311,
+      -0.281494,
+      0.037476,
+      -0.022827,
+      -0.018555
+    ],
+    "urdf": [
+      -0.538833,
+      -0.007244,
+      0.020997,
+      0.328677,
+      -1.76868,
+      -0.235466,
+      0.143427,
+      0.116583
+    ],
+    "note": "lj0 is metres, lj1..lj6 and the gripper are radians"
+  },
+  {
+    "label": "supply_orange",
+    "arm": "arm_left",
+    "recorded_at": "2026-09-12T18:12:25",
+    "joint_names": [
+      "lj0",
+      "lj1",
+      "lj2",
+      "lj3",
+      "lj4",
+      "lj5",
+      "lj6",
+      "left_left_gripper"
+    ],
+    "turns": [
+      1.844258,
+      -0.001641,
+      -0.003098,
+      0.052311,
+      -0.281494,
+      0.03772,
+      -0.023071,
+      -0.018555
+    ],
+    "urdf": [
+      -0.538833,
+      -0.010311,
+      0.019463,
+      0.328677,
+      -1.76868,
+      -0.237,
+      0.144961,
+      0.116583
+    ],
+    "note": "lj0 is metres, lj1..lj6 and the gripper are radians"
+  },
+  {
+    "label": "supply_orange",
+    "arm": "arm_left",
+    "recorded_at": "2026-09-12T19:42:52",
+    "joint_names": [
+      "lj0",
+      "lj1",
+      "lj2",
+      "lj3",
+      "lj4",
+      "lj5",
+      "lj6",
+      "left_left_gripper"
+    ],
+    "turns": [
+      0.469502,
+      0.001044,
+      0.005936,
+      0.043766,
+      -0.054443,
+      0.028931,
+      -0.038208,
+      -0.036621
+    ],
+    "urdf": [
+      -0.137173,
+      0.006562,
+      -0.037294,
+      0.274988,
+      -0.342078,
+      -0.181777,
+      0.240068,
+      0.230097
+    ],
+    "note": "lj0 is metres, lj1..lj6 and the gripper are radians"
+  }
+]

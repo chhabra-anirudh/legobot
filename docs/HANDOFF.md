@@ -3,9 +3,18 @@
 Updated 2026-09-12. Active work: robotics/simulation and first hardware
 execution, branch **`fix/assembly-centered-grasp`**. Other individual owners are unassigned.
 
+**New here? Read [ROBOT_SETUP.md](ROBOT_SETUP.md) first** — setup, the full run
+recipe, hardware calibration numbers, the bbos interface reference, and the traps.
+This file is the running log.
+
 **Newest section is [First hardware execution](#first-hardware-execution-the-build-trajectory-on-the-real-arm-2026-09-12)** — the arm has now
 been driven from the simulated plan. Earlier sections describe older states and
 are kept for history; where they disagree, the hardware section is current.
+
+Robot-side state is backed up in `robot/` (scripts, `calibration/`, `diagnostics/`).
+The robot's `~/bbapps` is shared with other teams and is not version controlled:
+run `./robot/deploy.sh pull` after teaching poses, and `./robot/deploy.sh push` to
+restore our scripts after someone else has used the machine.
 
 ## Current state
 
