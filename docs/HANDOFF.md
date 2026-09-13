@@ -1,7 +1,8 @@
 # Live handoff — start here
 
 Updated 2026-09-12. Active work: robotics/simulation and first hardware
-execution, branch **`fix/assembly-centered-grasp`**. Other individual owners are unassigned.
+execution. **Everything below is merged and pushed to `main` (8f083e3)** —
+start new work from `main`, not from a feature branch. Individual owners are unassigned.
 
 **New here? Read [ROBOT_SETUP.md](ROBOT_SETUP.md) first** — setup, the full run
 recipe, hardware calibration numbers, the bbos interface reference, and the traps.
@@ -109,6 +110,19 @@ normal execution. See [CONTACT_SIM.md](CONTACT_SIM.md) and
 slip, then add failure-aware transitions. Do not train on perfect-state
 diagnostic traces unchanged or call the old idealized replay a physical grasp.
 Assume no robot access until confirmed; hardware work need not block simulation.
+
+## Merged to main (2026-09-12)
+
+`fix/assembly-centered-grasp` fast-forwarded into `main` at **8f083e3** and pushed.
+Six commits, previously unmerged, from two authors: the centered soft-pad grasp and
+stable cube colors, the compiler that turns a prompt into a checked voxel structure,
+the assembly grasp centred on the measured contact patch, the robot-side scripts,
+the first hardware executions, and the robot backup plus
+[ROBOT_SETUP.md](ROBOT_SETUP.md). Source branches are retained.
+
+Verified on `main` before pushing: 26 sim tests, 22 compiler tests,
+`simulate_assembly.py --check` at 409 poses, and `build_structure.py` planning the
+16-cube dog at 1699 poses.
 
 ## Collaboration
 
@@ -346,5 +360,5 @@ Run: `.venv/bin/python sim/contact_grasp.py --color blue --show-contacts --save
 outputs/foam-centered.rrd`. Three-cube animation uses red/green/blue from config.
 New recordings are required to see the changes. `.gitattributes` now preserves
 URDF LF bytes for Windows checkouts, addressing the teammate's WSL hash issue.
-This branch has not been merged into main. Next: calibrate foam and heavy-load
+(This branch was merged into main on 2026-09-12.) Next: calibrate foam and heavy-load
 slip, then failure-aware control and demonstration contracts.
