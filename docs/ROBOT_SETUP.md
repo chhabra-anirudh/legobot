@@ -204,15 +204,21 @@ path can jump. `--origin 0.15 0.2008` is clean; prefer an origin with none.
 | Gripper sign | URDF rad = `-2*pi*turns` | `gripper_sign = -1` |
 | Gripper range | `[-0.379, 0]` turns (~0 to 2.38 rad) | `ranges.calibration.json` |
 | **Grasp angle (1 inch cube)** | **0.2301 rad with a 25.4 mm cube held** | **Measured on hardware** |
-| `gripper_grasp_rad` | **0.36 rad** for the 2 inch block | derived, see below |
-| `gripper_open_rad` | **0.50 rad** | ~9 mm clearance per side |
+| `gripper_grasp_rad` | **0.21 rad** for the one-inch cube | restored one-inch configuration |
+| `gripper_open_rad` | **0.35 rad** | restored one-inch configuration |
 | Gripper torque cap | 300 of 1000 | `torque_limit[7]` |
 | J7 current relief | enabled, `i_hold = 1.5 A`, backoff <= 0.1 turns | `constants.py` |
 | Table height | **0.5 m (set, not surveyed)**; 0.78 m measured and rejected | `sim/assembly_config.json` |
-| Block size | **50.8 x 50.8 x 25.4 mm** (2 inches across, 1 inch tall) | confirmed by the user |
+| Block size | **25.4 x 25.4 x 25.4 mm** (one-inch cube) | confirmed by the user |
 | Tool grasp point | `[0.018, 0, 0.004]` m in `left_eef` | foam pad centre offset |
 
-### Jaw angles for the 2 inch block, and how they were derived
+### Historical two-inch proposal (superseded by explicit user instruction)
+
+**Current blocks remain one inch on every axis.** The following derivation is
+historical only; its 0.36/0.50 rad commands are not active. Learning uses a
+separate provisional contact-controller opening, not hardware calibration.
+
+#### Original derivation
 
 The blocks changed from 1 inch cubes to 2 inches across and 1 inch tall. Height is
 unchanged, so **nothing about how far down the arm reaches changed** — only the jaw

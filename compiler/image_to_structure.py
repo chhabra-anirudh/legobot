@@ -97,11 +97,8 @@ def main(argv=None):
     parser.add_argument('image', help='png, jpeg, gif, or webp file')
     parser.add_argument('--subject', default='',
                         help='what the picture shows, if you want to tell the model')
-    parser.add_argument('--grid', type=int, nargs=2, default=[18, 7], metavar=('W', 'H'),
-                        help='build grid in cells. 18x7 is the largest rectangle that '
-                             'fits in front of the robot once the chassis is excluded '
-                             'from the measured reach; check a structure with '
-                             'sim/build_structure.py --list-origins (default: 18 7)')
+    parser.add_argument('--grid', type=int, nargs=2, default=[10, 8], metavar=('W', 'H'),
+                        help='one-inch cube grid (default: 10 8); planner checks actual reach and staging')
     parser.add_argument('--coverage', type=float, default=imaging.DEFAULT_COVERAGE,
                         help='fraction of a cell that must be subject for a cube')
     parser.add_argument('--tolerance', type=float, default=imaging.DEFAULT_TOLERANCE,

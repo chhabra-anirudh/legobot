@@ -18,12 +18,9 @@ from cube_colors import COLORS  # noqa: E402  single source of truth for colors
 from placement import sequence  # noqa: E402
 
 SCHEMA_VERSION = 1
-# Horizontal cell pitch of one block, confirmed by the user: the blocks are now
-# 2 inches across and 1 inch tall, so this is 50.8 mm while a layer is 25.4 mm high.
-# `cube_size_m` therefore means the **plan** size of a cell, and the layer height
-# lives in `sim/assembly_config.json` as `block_size_m[2]`. Measured stack pitch is a
-# separate calibration quantity and is deliberately not represented here.
-NOMINAL_CUBE_SIZE_M = .0508
+# User-confirmed one-inch cubes on all three axes. Keep cell pitch and
+# layer height explicit; actual calibration is a separate concern.
+NOMINAL_CUBE_SIZE_M = .0254
 NOMINAL_LAYER_HEIGHT_M = .0254
 # Provisional limits. Real inventory, reachable footprint, and a validated layer
 # count are not confirmed; override them explicitly per build.
@@ -157,7 +154,7 @@ def validate(structure, limits=None, inventory=None):
         add('cube_size', 'cube_size_m must be a positive number')
     elif abs(size - NOMINAL_CUBE_SIZE_M) > 1e-9:
         add('cube_size', f'cube_size_m {size} does not match the confirmed '
-                         f'{NOMINAL_CUBE_SIZE_M} m block width (2 inches across, '
+                         f'{NOMINAL_CUBE_SIZE_M} m cube width (1 inch across, '
                          f'{NOMINAL_LAYER_HEIGHT_M} m tall)')
 
     if not structure.voxels:

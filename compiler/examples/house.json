@@ -1,0 +1,259 @@
+{
+  "schema_version": 1,
+  "structure_id": "a-small-house",
+  "name": "Small house",
+  "cube_size_m": 0.0254,
+  "source": "claude-opus-5-medium (interactive agent session)",
+  "prompt": "a small house",
+  "voxels": [
+    {
+      "x": 1,
+      "y": 0,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 1,
+      "y": 1,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 1,
+      "y": 2,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 1,
+      "y": 3,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 1,
+      "y": 4,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 1,
+      "y": 5,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 2,
+      "y": 0,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 2,
+      "y": 5,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 2,
+      "y": 6,
+      "z": 0,
+      "color": "red"
+    },
+    {
+      "x": 2,
+      "y": 7,
+      "z": 0,
+      "color": "red"
+    },
+    {
+      "x": 3,
+      "y": 0,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 3,
+      "y": 5,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "z": 0,
+      "color": "red"
+    },
+    {
+      "x": 3,
+      "y": 8,
+      "z": 0,
+      "color": "red"
+    },
+    {
+      "x": 4,
+      "y": 0,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 4,
+      "y": 5,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 4,
+      "y": 8,
+      "z": 0,
+      "color": "red"
+    },
+    {
+      "x": 5,
+      "y": 0,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 5,
+      "y": 1,
+      "z": 0,
+      "color": "blue"
+    },
+    {
+      "x": 5,
+      "y": 2,
+      "z": 0,
+      "color": "blue"
+    },
+    {
+      "x": 5,
+      "y": 5,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 5,
+      "y": 8,
+      "z": 0,
+      "color": "red"
+    },
+    {
+      "x": 6,
+      "y": 0,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 6,
+      "y": 5,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 6,
+      "y": 8,
+      "z": 0,
+      "color": "red"
+    },
+    {
+      "x": 7,
+      "y": 0,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 7,
+      "y": 5,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 7,
+      "y": 7,
+      "z": 0,
+      "color": "red"
+    },
+    {
+      "x": 7,
+      "y": 8,
+      "z": 0,
+      "color": "red"
+    },
+    {
+      "x": 8,
+      "y": 0,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 8,
+      "y": 3,
+      "z": 0,
+      "color": "yellow"
+    },
+    {
+      "x": 8,
+      "y": 5,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 8,
+      "y": 6,
+      "z": 0,
+      "color": "red"
+    },
+    {
+      "x": 8,
+      "y": 7,
+      "z": 0,
+      "color": "red"
+    },
+    {
+      "x": 9,
+      "y": 0,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 9,
+      "y": 1,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 9,
+      "y": 2,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 9,
+      "y": 3,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 9,
+      "y": 4,
+      "z": 0,
+      "color": "white"
+    },
+    {
+      "x": 9,
+      "y": 5,
+      "z": 0,
+      "color": "white"
+    }
+  ],
+  "provenance": {
+    "mode": "reply",
+    "grid": [
+      12,
+      9
+    ],
+    "reasoning": "A hollow one-cube-wide box for the walls with a stepped red roof rising to a flat apex, a blue door on the floor line and a yellow window off the right wall. Every cube is at z=0 so nothing overhangs, the box is hollow and the roof steps in L moves, so no 2x2 area is filled and the fingers always have a free side.",
+    "simplified": []
+  }
+}

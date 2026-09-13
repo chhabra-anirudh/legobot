@@ -206,9 +206,8 @@ def staging_layout(structure, c, calibration, reach):
         return (angle > np.pi/2, -round(float(np.dot(slot, forward)), 3),
                 -round(np.hypot(*slot), 3), -slot[1], slot[0])
 
-    # Slots must be a whole empty cell apart, and a cell is now wider than one
-    # reach-map sample: the map is probed on its own lattice, the blocks are 2 inches
-    # across. Stepping by samples instead of by cells staged them touching.
+    # Slots must be a whole empty cell apart. Convert physical cube pitch to
+    # reach-map samples so spacing remains valid if either lattice changes.
     spacing = min((b-a for a, b in zip(xs, xs[1:]) if b > a), default=pitch)
     step = max(2, int(round(2*pitch/spacing)))
     free = [(x, y) for (x, y) in sorted(reach, key=order)
@@ -234,6 +233,43 @@ def staging_layout(structure, c, calibration, reach):
             positions.append(np.array([x, y, z]))
             colors.append(color)
     return positions, colors, picks
+
+
+def choose_placement(structure, c, calibration, reach, pitch, *, turns=(0, 1, 2, 3), face=False):
+    """Choose a reachable rotation/origin with room for all supply cubes.
+
+    Callers must pass the measured reach after chassis exclusion. This shared
+    selection keeps learned construction and the command-line planner aligned.
+    """
+    nose_x = float(np.asarray(c['base_footprint_m'], dtype=float)[0][1])
+    candidates = []
+    for quarter in turns:
+        calibration['quarter_turns'] = quarter
+        fits = candidate_origins(structure, c, calibration, reach, pitch,
+                                 face=face)
+        for origin in fits:
+            calibration['origin_xy_m'] = np.array(origin, dtype=float)
+            try:
+                staging_layout(structure, c, calibration, reach)
+            except ValueError:
+                continue  # fits the reach but leaves no room to stage cubes
+            cubes = [cell_centre(v.cell, c, calibration) for v in structure.voxels]
+            facing = min(p[0] for p in cubes) > nose_x
+            candidates.append((not facing, quarter, origin, len(fits)))
+            break         # best origin at this rotation; try the next rotation
+    # Every rotation that can be built, best facing first. A wide design often
+    # only stands in front of the robot one way round.
+    candidates.sort(key=lambda item: (item[0], item[1]))
+    chosen = ((candidates[0][2], candidates[0][1], candidates[0][3])
+              if candidates else None)
+    if chosen is None:
+        raise ValueError(
+            f'no placement fits this structure inside the measured reach at a '
+            f'{c["table_height_m"]} m table with room to stage '
+            f'{len(structure.voxels)} cubes, at any quarter turn. Use a smaller '
+            f'structure, or lower the table: reach shrinks sharply near the top '
+            f'of the vertical travel.')
+    return chosen
 
 
 def plan_build(structure, c, arm, calibration, reach):
@@ -651,34 +687,8 @@ def main(argv=None):
             # one from the measured reach instead and say which was used. Each
             # quarter turn is a different set of origins: a wide design may only
             # stand in front of the robot one way round.
-            nose_x = float(np.asarray(c['base_footprint_m'], dtype=float)[0][1])
-            candidates = []
-            for quarter in turns:
-                calibration['quarter_turns'] = quarter
-                fits = candidate_origins(structure, c, calibration, reach, pitch,
-                                         face=args.face)
-                for origin in fits:
-                    calibration['origin_xy_m'] = np.array(origin, dtype=float)
-                    try:
-                        staging_layout(structure, c, calibration, reach)
-                    except ValueError:
-                        continue  # fits the reach but leaves no room to stage cubes
-                    cubes = [cell_centre(v.cell, c, calibration) for v in structure.voxels]
-                    facing = min(p[0] for p in cubes) > nose_x
-                    candidates.append((not facing, quarter, origin, len(fits)))
-                    break         # best origin at this rotation; try the next rotation
-            # Every rotation that can be built, best facing first. A wide design often
-            # only stands in front of the robot one way round.
-            candidates.sort(key=lambda item: (item[0], item[1]))
-            chosen = ((candidates[0][2], candidates[0][1], candidates[0][3])
-                      if candidates else None)
-            if chosen is None:
-                raise ValueError(
-                    f'no placement fits this structure inside the measured reach at a '
-                    f'{c["table_height_m"]} m table with room to stage '
-                    f'{len(structure.voxels)} cubes, at any quarter turn. Use a smaller '
-                    f'structure, or lower the table: reach shrinks sharply near the top '
-                    f'of the vertical travel.')
+            chosen = choose_placement(structure, c, calibration, reach, pitch,
+                                      turns=turns, face=args.face)
             origin, quarter, count = chosen
             calibration['origin_xy_m'] = np.array(origin, dtype=float)
             calibration['quarter_turns'] = quarter

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "structure_id": "smiley",
   "name": "Smiley face",
-  "cube_size_m": 0.0508,
+  "cube_size_m": 0.0254,
   "source": "claude-opus-5-medium (interactive agent session)",
   "prompt": "a smiley face with two eyes",
   "voxels": [
@@ -75,6 +75,17 @@
       0.0508,
       0.0254
     ],
-    "reasoning": "Drawn for 2 inch blocks, where the reachable area in front of the robot is ten cells by three. The mouth runs along the near row with its corners turning up, and the eyes sit two rows above it, so nothing touches them and they are their own pieces."
+    "reasoning": "Drawn for 2 inch blocks, where the reachable area in front of the robot is ten cells by three. The mouth runs along the near row with its corners turning up, and the eyes sit two rows above it, so nothing touches them and they are their own pieces.",
+    "original_design_block_size_m": [
+      0.0508,
+      0.0508,
+      0.0254
+    ],
+    "block_size_m": [
+      0.0254,
+      0.0254,
+      0.0254
+    ],
+    "local_adaptation": "User explicitly retained one-inch cubes; logical shape unchanged."
   }
 }

@@ -1,7 +1,7 @@
 # LegoBot
 
 Prompt- or picture-to-structure assembly with BracketBot and magnetic blocks
-**2 inches across and 1 inch tall** (50.8 x 50.8 x 25.4 mm). One arm and a finger
+**1 inch on every axis** (25.4 x 25.4 x 25.4 mm). One arm and a finger
 gripper; imitation learning for pickup is planned.
 
 **Start here:** [Robot setup and status report](docs/ROBOT_SETUP.md) — full context for picking this up cold ·
@@ -32,11 +32,12 @@ answers the design request. The structure file always records which one produced
 
 # cached examples, planned straight into the simulator
 .venv/bin/python sim/build_structure.py compiler/examples/smiley.json   # 10 blocks
-.venv/bin/python sim/build_structure.py compiler/examples/rocket.json   # 11 blocks
+.venv/bin/python sim/build_structure.py compiler/examples/rocket.json   # 26 cubes
 ```
 
-The reachable build area is **10x3 blocks** at a 0.5 m table. At 0.78 m only a single
-row of six fits — see [the handoff](docs/HANDOFF.md) before moving the table.
+Blocks remain one-inch cubes by explicit user instruction. Each design is checked
+against the latest reach map and chassis exclusion; the superseded two-inch
+workspace counts do not apply.
 
 The simulated build is kinematics with idealized attachment: finishing here means
 the design satisfies the stated rules, not that the real arm can place 40 cubes.

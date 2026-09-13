@@ -1,0 +1,2526 @@
+{
+  "scope": "simulated pickup only; no hardware or full-build claim",
+  "split": "test",
+  "checkpoint_sha256": "1631c70a7472f8a5b918a1e23a718abcf03f7859fe13fade357f5a4d7d01b047",
+  "success_rates": {
+    "expert": 1.0,
+    "learned": 1.0
+  },
+  "fresh_test": true,
+  "evaluation_protocol": {
+    "checkpoint_sha256": "1631c70a7472f8a5b918a1e23a718abcf03f7859fe13fade357f5a4d7d01b047",
+    "source_hashes": {
+      "learning_env.py": "7a1c7dfdc2436b8e0ccbdbdd07a8f765957bbab7de6f24c1ae8ffb40ef61c192",
+      "contact_grasp.py": "4dad86ab3c5b37d43f945428696bae0ec24b71483ab43ac65e86d93a445a1bed",
+      "foam_pad_config.json": "22f6d77e4577db9a2764834c5b833db492849c076f72d580595b30e84e9d80ff",
+      "collision/manifest.json": "7f03a895690451f8ab779d8c1b232d8fbeb18fbc1da3cbfddb8b5895288bd24a",
+      "chopped_urdf_v2/urdf/chopped_urdf_v2.urdf": "4ea3652f2a19141952f93eb1de162d36c95aa851ec59bb942a3dcebcdd3a7d57"
+    },
+    "test_seeds": [
+      7000,
+      7001,
+      7002,
+      7003,
+      7004,
+      7005,
+      7006,
+      7007,
+      7008,
+      7009,
+      7010,
+      7011,
+      7012,
+      7013,
+      7014,
+      7015,
+      7016,
+      7017,
+      7018,
+      7019,
+      7020,
+      7021,
+      7022,
+      7023,
+      7024,
+      7025,
+      7026,
+      7027,
+      7028,
+      7029,
+      7030,
+      7031
+    ],
+    "pickup_acceptance": {
+      "minimum_test_success_rate": 0.9,
+      "maximum_gap_below_expert": 0.1
+    },
+    "reason": "Original test seeds were inspected during prior checkpoint development; reserve fresh seeds before evaluating the frozen final checkpoint."
+  },
+  "pickup_gate_passed": true,
+  "runs": [
+    {
+      "seed": 7000,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5436193507416611,
+          1.543617282467112
+        ],
+        "max_lift_hold_slip_m": 0.001427423468593742,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7000,
+          "position_m": [
+            -0.0017515876969699945,
+            0.01964977187707926,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.12632042546844488,
+          "friction": 0.6287210330148034,
+          "mass_kg": 0.026561853225936377,
+          "observation_bias_m": [
+            0.0001574242712601783,
+            2.031640897754859e-05,
+            -0.00011722621581048917
+          ],
+          "observation_yaw_bias_rad": -0.013052157772311014,
+          "initial_tool_offset_m": [
+            0.0008683926490042956,
+            -0.00016663204469457866,
+            -0.0016010467439280542
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.2199999999997564
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5436193566774934,
+          1.5436172850338299
+        ],
+        "max_lift_hold_slip_m": 0.0014274968759672843,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7000,
+          "position_m": [
+            -0.0017515876969699945,
+            0.01964977187707926,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.12632042546844488,
+          "friction": 0.6287210330148034,
+          "mass_kg": 0.026561853225936377,
+          "observation_bias_m": [
+            0.0001574242712601783,
+            2.031640897754859e-05,
+            -0.00011722621581048917
+          ],
+          "observation_yaw_bias_rad": -0.013052157772311014,
+          "initial_tool_offset_m": [
+            0.0008683926490042956,
+            -0.00016663204469457866,
+            -0.0016010467439280542
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      }
+    },
+    {
+      "seed": 7001,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.543885324914747,
+          1.5438836793483566
+        ],
+        "max_lift_hold_slip_m": 0.001377057998057412,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7001,
+          "position_m": [
+            0.016285637485856833,
+            0.014330400805549523,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.03613792292211532,
+          "friction": 0.7881910760403836,
+          "mass_kg": 0.02349188365969138,
+          "observation_bias_m": [
+            -0.00011059001696239854,
+            -0.0002630392435226885,
+            -0.00029085112666801284
+          ],
+          "observation_yaw_bias_rad": 0.011543736080588052,
+          "initial_tool_offset_m": [
+            -0.004121879455203564,
+            -0.0015208181716064827,
+            0.0009629354296481207
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.543885328842815,
+          1.5438835864477474
+        ],
+        "max_lift_hold_slip_m": 0.0013773027982738972,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7001,
+          "position_m": [
+            0.016285637485856833,
+            0.014330400805549523,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.03613792292211532,
+          "friction": 0.7881910760403836,
+          "mass_kg": 0.02349188365969138,
+          "observation_bias_m": [
+            -0.00011059001696239854,
+            -0.0002630392435226885,
+            -0.00029085112666801284
+          ],
+          "observation_yaw_bias_rad": 0.011543736080588052,
+          "initial_tool_offset_m": [
+            -0.004121879455203564,
+            -0.0015208181716064827,
+            0.0009629354296481207
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      }
+    },
+    {
+      "seed": 7002,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5439387793921424,
+          1.5439372448847921
+        ],
+        "max_lift_hold_slip_m": 0.0013603415925880623,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7002,
+          "position_m": [
+            0.0010919360234872381,
+            0.013232898551324312,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.10761855849129251,
+          "friction": 0.8584222045733299,
+          "mass_kg": 0.022593461450314024,
+          "observation_bias_m": [
+            -6.474372934561811e-05,
+            3.5352400593552955e-05,
+            9.54443374306916e-05
+          ],
+          "observation_yaw_bias_rad": 0.014351815803825906,
+          "initial_tool_offset_m": [
+            0.003659761624030775,
+            -0.0013678803801067808,
+            -0.0023366802376273434
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5439386791939074,
+          1.5439367876157777
+        ],
+        "max_lift_hold_slip_m": 0.0013604666367062947,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7002,
+          "position_m": [
+            0.0010919360234872381,
+            0.013232898551324312,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.10761855849129251,
+          "friction": 0.8584222045733299,
+          "mass_kg": 0.022593461450314024,
+          "observation_bias_m": [
+            -6.474372934561811e-05,
+            3.5352400593552955e-05,
+            9.54443374306916e-05
+          ],
+          "observation_yaw_bias_rad": 0.014351815803825906,
+          "initial_tool_offset_m": [
+            0.003659761624030775,
+            -0.0013678803801067808,
+            -0.0023366802376273434
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      }
+    },
+    {
+      "seed": 7003,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5432408370245645,
+          1.543238249003958
+        ],
+        "max_lift_hold_slip_m": 0.0014719698953499399,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7003,
+          "position_m": [
+            0.0007979879185236391,
+            -0.0206189448048361,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.04016492729181889,
+          "friction": 0.5051169321329136,
+          "mass_kg": 0.029748052781596687,
+          "observation_bias_m": [
+            0.00014494099996518783,
+            -0.00018583326500134234,
+            0.00029237331574492794
+          ],
+          "observation_yaw_bias_rad": -0.013220349925228076,
+          "initial_tool_offset_m": [
+            -0.0006505002458200241,
+            -0.0005068437784044007,
+            -0.0007786717489145769
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.2199999999997564
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5432408439421377,
+          1.5432382508842928
+        ],
+        "max_lift_hold_slip_m": 0.001472295015275034,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7003,
+          "position_m": [
+            0.0007979879185236391,
+            -0.0206189448048361,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.04016492729181889,
+          "friction": 0.5051169321329136,
+          "mass_kg": 0.029748052781596687,
+          "observation_bias_m": [
+            0.00014494099996518783,
+            -0.00018583326500134234,
+            0.00029237331574492794
+          ],
+          "observation_yaw_bias_rad": -0.013220349925228076,
+          "initial_tool_offset_m": [
+            -0.0006505002458200241,
+            -0.0005068437784044007,
+            -0.0007786717489145769
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.2199999999997564
+      }
+    },
+    {
+      "seed": 7004,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5437432944133482,
+          1.543741412480576
+        ],
+        "max_lift_hold_slip_m": 0.0014087541733438015,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7004,
+          "position_m": [
+            0.012259989662011105,
+            -0.009706560932507918,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.1290988039857586,
+          "friction": 0.6026555264781439,
+          "mass_kg": 0.02529185533360573,
+          "observation_bias_m": [
+            0.0003555508175291104,
+            -0.00013779979544787171,
+            0.00012817203753309753
+          ],
+          "observation_yaw_bias_rad": -0.00865956914751161,
+          "initial_tool_offset_m": [
+            -0.004822918345360151,
+            -0.004704962932938196,
+            0.0031210183355666514
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5437433005773047,
+          1.543741414510537
+        ],
+        "max_lift_hold_slip_m": 0.001408848570761325,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7004,
+          "position_m": [
+            0.012259989662011105,
+            -0.009706560932507918,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.1290988039857586,
+          "friction": 0.6026555264781439,
+          "mass_kg": 0.02529185533360573,
+          "observation_bias_m": [
+            0.0003555508175291104,
+            -0.00013779979544787171,
+            0.00012817203753309753
+          ],
+          "observation_yaw_bias_rad": -0.00865956914751161,
+          "initial_tool_offset_m": [
+            -0.004822918345360151,
+            -0.004704962932938196,
+            0.0031210183355666514
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      }
+    },
+    {
+      "seed": 7005,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5438080546738286,
+          1.5438062766873202
+        ],
+        "max_lift_hold_slip_m": 0.0013955740980006143,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7005,
+          "position_m": [
+            -0.018975341667024706,
+            0.023353980069854334,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.005706169762169561,
+          "friction": 0.8201505181841524,
+          "mass_kg": 0.024537189293059043,
+          "observation_bias_m": [
+            0.0002463017208848627,
+            -0.00023858336098857356,
+            0.000258106591181863
+          ],
+          "observation_yaw_bias_rad": -0.0007132925859547386,
+          "initial_tool_offset_m": [
+            -0.002412501236735114,
+            0.0007402859869963677,
+            0.001533078026719206
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5438080605879423,
+          1.543806278774071
+        ],
+        "max_lift_hold_slip_m": 0.001395845881525149,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7005,
+          "position_m": [
+            -0.018975341667024706,
+            0.023353980069854334,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.005706169762169561,
+          "friction": 0.8201505181841524,
+          "mass_kg": 0.024537189293059043,
+          "observation_bias_m": [
+            0.0002463017208848627,
+            -0.00023858336098857356,
+            0.000258106591181863
+          ],
+          "observation_yaw_bias_rad": -0.0007132925859547386,
+          "initial_tool_offset_m": [
+            -0.002412501236735114,
+            0.0007402859869963677,
+            0.001533078026719206
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      }
+    },
+    {
+      "seed": 7006,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5439044408096358,
+          1.5439028381527424
+        ],
+        "max_lift_hold_slip_m": 0.0013724516065375903,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7006,
+          "position_m": [
+            -0.009618508837568714,
+            0.012339726481933294,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.12560359663779777,
+          "friction": 0.9175721956803196,
+          "mass_kg": 0.023194144801018127,
+          "observation_bias_m": [
+            -0.00039145815512149493,
+            -0.0003407704413347735,
+            -9.491131456609815e-05
+          ],
+          "observation_yaw_bias_rad": -0.009191608438249217,
+          "initial_tool_offset_m": [
+            0.0014985130535921203,
+            -0.001030029140422166,
+            0.002689229830931311
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.543904407167557,
+          1.543901197789896
+        ],
+        "max_lift_hold_slip_m": 0.001372540645331627,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7006,
+          "position_m": [
+            -0.009618508837568714,
+            0.012339726481933294,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.12560359663779777,
+          "friction": 0.9175721956803196,
+          "mass_kg": 0.023194144801018127,
+          "observation_bias_m": [
+            -0.00039145815512149493,
+            -0.0003407704413347735,
+            -9.491131456609815e-05
+          ],
+          "observation_yaw_bias_rad": -0.009191608438249217,
+          "initial_tool_offset_m": [
+            0.0014985130535921203,
+            -0.001030029140422166,
+            0.002689229830931311
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      }
+    },
+    {
+      "seed": 7007,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.543822153073758,
+          1.5438203987633257
+        ],
+        "max_lift_hold_slip_m": 0.0013922387566682951,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7007,
+          "position_m": [
+            -0.023096563455047542,
+            0.019055911552297987,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.03137178448401806,
+          "friction": 0.9281793386969,
+          "mass_kg": 0.024360687945198602,
+          "observation_bias_m": [
+            0.0001641157533829874,
+            3.7950134859669575e-05,
+            -8.9849829182421e-05
+          ],
+          "observation_yaw_bias_rad": 0.005312587390390339,
+          "initial_tool_offset_m": [
+            -0.004195941278566677,
+            0.003118797411160382,
+            0.0039390790213258515
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.259999999999752
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.543822160807554,
+          1.5438204024171924
+        ],
+        "max_lift_hold_slip_m": 0.0013924603563446704,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7007,
+          "position_m": [
+            -0.023096563455047542,
+            0.019055911552297987,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.03137178448401806,
+          "friction": 0.9281793386969,
+          "mass_kg": 0.024360687945198602,
+          "observation_bias_m": [
+            0.0001641157533829874,
+            3.7950134859669575e-05,
+            -8.9849829182421e-05
+          ],
+          "observation_yaw_bias_rad": 0.005312587390390339,
+          "initial_tool_offset_m": [
+            -0.004195941278566677,
+            0.003118797411160382,
+            0.0039390790213258515
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.259999999999752
+      }
+    },
+    {
+      "seed": 7008,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5433863913162926,
+          1.543383997847152
+        ],
+        "max_lift_hold_slip_m": 0.0014565291208745925,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7008,
+          "position_m": [
+            0.022592776938789423,
+            0.027249007714788206,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.000730363744457313,
+          "friction": 0.681328671400214,
+          "mass_kg": 0.028604981057879373,
+          "observation_bias_m": [
+            -8.900589648253021e-05,
+            0.0001400615503159513,
+            0.00025868696933336954
+          ],
+          "observation_yaw_bias_rad": -0.0040434131865445064,
+          "initial_tool_offset_m": [
+            0.001217912782379019,
+            -0.004827222325336221,
+            0.00322826817518648
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5433863981980935,
+          1.543384001775793
+        ],
+        "max_lift_hold_slip_m": 0.0014566141119047532,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7008,
+          "position_m": [
+            0.022592776938789423,
+            0.027249007714788206,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.000730363744457313,
+          "friction": 0.681328671400214,
+          "mass_kg": 0.028604981057879373,
+          "observation_bias_m": [
+            -8.900589648253021e-05,
+            0.0001400615503159513,
+            0.00025868696933336954
+          ],
+          "observation_yaw_bias_rad": -0.0040434131865445064,
+          "initial_tool_offset_m": [
+            0.001217912782379019,
+            -0.004827222325336221,
+            0.00322826817518648
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      }
+    },
+    {
+      "seed": 7009,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5437774807798021,
+          1.5437756532155507
+        ],
+        "max_lift_hold_slip_m": 0.0014025253478148014,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7009,
+          "position_m": [
+            -0.0019766346660273944,
+            -0.0045971915665469,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.03425284369914669,
+          "friction": 0.7852695773515612,
+          "mass_kg": 0.02490378330696976,
+          "observation_bias_m": [
+            -0.0003715545127440963,
+            0.00017355080835667632,
+            0.0003088575429167452
+          ],
+          "observation_yaw_bias_rad": -0.0024302938027776916,
+          "initial_tool_offset_m": [
+            0.0012034697905182754,
+            -0.0022711724022698976,
+            0.0017132322009878985
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5437774870872716,
+          1.543775655277089
+        ],
+        "max_lift_hold_slip_m": 0.0014027715887229887,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7009,
+          "position_m": [
+            -0.0019766346660273944,
+            -0.0045971915665469,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.03425284369914669,
+          "friction": 0.7852695773515612,
+          "mass_kg": 0.02490378330696976,
+          "observation_bias_m": [
+            -0.0003715545127440963,
+            0.00017355080835667632,
+            0.0003088575429167452
+          ],
+          "observation_yaw_bias_rad": -0.0024302938027776916,
+          "initial_tool_offset_m": [
+            0.0012034697905182754,
+            -0.0022711724022698976,
+            0.0017132322009878985
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      }
+    },
+    {
+      "seed": 7010,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5433520825209168,
+          1.5433496451729376
+        ],
+        "max_lift_hold_slip_m": 0.001460527253365487,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7010,
+          "position_m": [
+            -0.018643642534885534,
+            -0.011859639835098884,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.07042080211807997,
+          "friction": 0.7918593909065945,
+          "mass_kg": 0.028881599919289257,
+          "observation_bias_m": [
+            0.00022174507505552074,
+            -0.00031144300742968415,
+            -0.0002631948843412435
+          ],
+          "observation_yaw_bias_rad": 0.007292579048902646,
+          "initial_tool_offset_m": [
+            0.004951452421194587,
+            0.004117414370998561,
+            -0.0033886112093539423
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5433520915631747,
+          1.543349647738901
+        ],
+        "max_lift_hold_slip_m": 0.0014607136514259446,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7010,
+          "position_m": [
+            -0.018643642534885534,
+            -0.011859639835098884,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.07042080211807997,
+          "friction": 0.7918593909065945,
+          "mass_kg": 0.028881599919289257,
+          "observation_bias_m": [
+            0.00022174507505552074,
+            -0.00031144300742968415,
+            -0.0002631948843412435
+          ],
+          "observation_yaw_bias_rad": 0.007292579048902646,
+          "initial_tool_offset_m": [
+            0.004951452421194587,
+            0.004117414370998561,
+            -0.0033886112093539423
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      }
+    },
+    {
+      "seed": 7011,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5432474739347917,
+          1.5432448925938118
+        ],
+        "max_lift_hold_slip_m": 0.0014711265745453934,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7011,
+          "position_m": [
+            0.022446035906589883,
+            0.0008054968082989895,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.015810040468517833,
+          "friction": 0.6885507977208799,
+          "mass_kg": 0.029697544720403077,
+          "observation_bias_m": [
+            0.00014317550846100182,
+            0.00035793427821370513,
+            -0.00030130167843877713
+          ],
+          "observation_yaw_bias_rad": -0.003867262331211936,
+          "initial_tool_offset_m": [
+            0.003702515170960415,
+            -0.0018355210524069543,
+            -0.0021029860226211994
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5432474806667134,
+          1.543244895687286
+        ],
+        "max_lift_hold_slip_m": 0.0014712112645875086,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7011,
+          "position_m": [
+            0.022446035906589883,
+            0.0008054968082989895,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.015810040468517833,
+          "friction": 0.6885507977208799,
+          "mass_kg": 0.029697544720403077,
+          "observation_bias_m": [
+            0.00014317550846100182,
+            0.00035793427821370513,
+            -0.00030130167843877713
+          ],
+          "observation_yaw_bias_rad": -0.003867262331211936,
+          "initial_tool_offset_m": [
+            0.003702515170960415,
+            -0.0018355210524069543,
+            -0.0021029860226211994
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      }
+    },
+    {
+      "seed": 7012,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5437979680177811,
+          1.5437961738333277
+        ],
+        "max_lift_hold_slip_m": 0.001398060269031526,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7012,
+          "position_m": [
+            0.0035668185064897592,
+            0.014894047352038073,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.0048697380875905305,
+          "friction": 0.5809726453614983,
+          "mass_kg": 0.024660427572974944,
+          "observation_bias_m": [
+            0.0003721118042781633,
+            0.00015243388107696133,
+            0.00034204506778864576
+          ],
+          "observation_yaw_bias_rad": -0.011509909869246278,
+          "initial_tool_offset_m": [
+            0.0006505858650261561,
+            0.004569616612414381,
+            0.004380440652012649
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.259999999999752
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.543797974153488,
+          1.5437961757124856
+        ],
+        "max_lift_hold_slip_m": 0.0013984956861037836,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7012,
+          "position_m": [
+            0.0035668185064897592,
+            0.014894047352038073,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.0048697380875905305,
+          "friction": 0.5809726453614983,
+          "mass_kg": 0.024660427572974944,
+          "observation_bias_m": [
+            0.0003721118042781633,
+            0.00015243388107696133,
+            0.00034204506778864576
+          ],
+          "observation_yaw_bias_rad": -0.011509909869246278,
+          "initial_tool_offset_m": [
+            0.0006505858650261561,
+            0.004569616612414381,
+            0.004380440652012649
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.259999999999752
+      }
+    },
+    {
+      "seed": 7013,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.54389625057695,
+          1.5438946381830672
+        ],
+        "max_lift_hold_slip_m": 0.0013747305901518805,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7013,
+          "position_m": [
+            0.004981311594517812,
+            0.014250558082991874,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.1305647983597249,
+          "friction": 0.6171138138999976,
+          "mass_kg": 0.023324199001515653,
+          "observation_bias_m": [
+            0.0002800006419961508,
+            0.00024337649653034436,
+            -0.00039455759840115965
+          ],
+          "observation_yaw_bias_rad": 0.01293008102825476,
+          "initial_tool_offset_m": [
+            0.004820268750241485,
+            0.0014759978801900395,
+            0.0021000467539958375
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5438962630949216,
+          1.5438941411322122
+        ],
+        "max_lift_hold_slip_m": 0.0013748725258414612,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7013,
+          "position_m": [
+            0.004981311594517812,
+            0.014250558082991874,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.1305647983597249,
+          "friction": 0.6171138138999976,
+          "mass_kg": 0.023324199001515653,
+          "observation_bias_m": [
+            0.0002800006419961508,
+            0.00024337649653034436,
+            -0.00039455759840115965
+          ],
+          "observation_yaw_bias_rad": 0.01293008102825476,
+          "initial_tool_offset_m": [
+            0.004820268750241485,
+            0.0014759978801900395,
+            0.0021000467539958375
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      }
+    },
+    {
+      "seed": 7014,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5438877431538882,
+          1.5438861075297383
+        ],
+        "max_lift_hold_slip_m": 0.001376360113148518,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7014,
+          "position_m": [
+            0.0025446614267352827,
+            0.013272025675784505,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.02682939605709532,
+          "friction": 0.6994380072981533,
+          "mass_kg": 0.023455293709701758,
+          "observation_bias_m": [
+            0.00011763219053442705,
+            0.00038335176039215943,
+            -0.00018530934859147728
+          ],
+          "observation_yaw_bias_rad": 0.009024833856645632,
+          "initial_tool_offset_m": [
+            0.0039004997421864434,
+            -0.00174287650062372,
+            -0.0018102607802577822
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.2199999999997564
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5438877508065785,
+          1.5438859891837096
+        ],
+        "max_lift_hold_slip_m": 0.0013764101882546343,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7014,
+          "position_m": [
+            0.0025446614267352827,
+            0.013272025675784505,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.02682939605709532,
+          "friction": 0.6994380072981533,
+          "mass_kg": 0.023455293709701758,
+          "observation_bias_m": [
+            0.00011763219053442705,
+            0.00038335176039215943,
+            -0.00018530934859147728
+          ],
+          "observation_yaw_bias_rad": 0.009024833856645632,
+          "initial_tool_offset_m": [
+            0.0039004997421864434,
+            -0.00174287650062372,
+            -0.0018102607802577822
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      }
+    },
+    {
+      "seed": 7015,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.543555976078152,
+          1.5435538178373025
+        ],
+        "max_lift_hold_slip_m": 0.0014365023011092262,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7015,
+          "position_m": [
+            -0.017112742237641747,
+            0.016903943301182882,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.04095981234170677,
+          "friction": 0.5575723520251596,
+          "mass_kg": 0.027152286682747332,
+          "observation_bias_m": [
+            0.00022093638058308954,
+            -0.00036001938142726786,
+            -1.7736914763833767e-05
+          ],
+          "observation_yaw_bias_rad": -0.00030650243571902006,
+          "initial_tool_offset_m": [
+            0.0035201668876028097,
+            0.00045970707035299357,
+            -0.004134812413103773
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.179999999999761
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.543555982358145,
+          1.5435538202055075
+        ],
+        "max_lift_hold_slip_m": 0.0014365678346859828,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7015,
+          "position_m": [
+            -0.017112742237641747,
+            0.016903943301182882,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.04095981234170677,
+          "friction": 0.5575723520251596,
+          "mass_kg": 0.027152286682747332,
+          "observation_bias_m": [
+            0.00022093638058308954,
+            -0.00036001938142726786,
+            -1.7736914763833767e-05
+          ],
+          "observation_yaw_bias_rad": -0.00030650243571902006,
+          "initial_tool_offset_m": [
+            0.0035201668876028097,
+            0.00045970707035299357,
+            -0.004134812413103773
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.179999999999761
+      }
+    },
+    {
+      "seed": 7016,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5439646038068227,
+          1.5439631383488273
+        ],
+        "max_lift_hold_slip_m": 0.0013507698134538149,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7016,
+          "position_m": [
+            0.004128289952646691,
+            -0.009959514076469621,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.08778315462981032,
+          "friction": 0.6462390693475177,
+          "mass_kg": 0.022050514092703644,
+          "observation_bias_m": [
+            -0.00030701680703894415,
+            9.873685427514638e-06,
+            0.00023732291462479283
+          ],
+          "observation_yaw_bias_rad": 0.0007179753174067632,
+          "initial_tool_offset_m": [
+            0.0034819332189932667,
+            -0.0038363812775942165,
+            0.001870340131060421
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5439645152174224,
+          1.5439629948724476
+        ],
+        "max_lift_hold_slip_m": 0.0013509944888203554,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7016,
+          "position_m": [
+            0.004128289952646691,
+            -0.009959514076469621,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.08778315462981032,
+          "friction": 0.6462390693475177,
+          "mass_kg": 0.022050514092703644,
+          "observation_bias_m": [
+            -0.00030701680703894415,
+            9.873685427514638e-06,
+            0.00023732291462479283
+          ],
+          "observation_yaw_bias_rad": 0.0007179753174067632,
+          "initial_tool_offset_m": [
+            0.0034819332189932667,
+            -0.0038363812775942165,
+            0.001870340131060421
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      }
+    },
+    {
+      "seed": 7017,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5434791960504497,
+          1.543476931048297
+        ],
+        "max_lift_hold_slip_m": 0.0014464043026397317,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7017,
+          "position_m": [
+            -0.0030730240436535883,
+            -0.013116221586773696,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.04088356127962042,
+          "friction": 0.9991826555488652,
+          "mass_kg": 0.02782971063876133,
+          "observation_bias_m": [
+            0.00025654851712726814,
+            -0.00014437561964065137,
+            0.00013828733949102808
+          ],
+          "observation_yaw_bias_rad": -0.0034748846894199527,
+          "initial_tool_offset_m": [
+            0.004478488889712144,
+            -0.004449643273888029,
+            -0.0020910119175514053
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5434792024132238,
+          1.5434769331395375
+        ],
+        "max_lift_hold_slip_m": 0.001446568531583976,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7017,
+          "position_m": [
+            -0.0030730240436535883,
+            -0.013116221586773696,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.04088356127962042,
+          "friction": 0.9991826555488652,
+          "mass_kg": 0.02782971063876133,
+          "observation_bias_m": [
+            0.00025654851712726814,
+            -0.00014437561964065137,
+            0.00013828733949102808
+          ],
+          "observation_yaw_bias_rad": -0.0034748846894199527,
+          "initial_tool_offset_m": [
+            0.004478488889712144,
+            -0.004449643273888029,
+            -0.0020910119175514053
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      }
+    },
+    {
+      "seed": 7018,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.543783385893176,
+          1.5437815646300108
+        ],
+        "max_lift_hold_slip_m": 0.0013999443219008165,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7018,
+          "position_m": [
+            0.022116962691493477,
+            0.006165561709754019,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.008635658788377937,
+          "friction": 0.9908658718806407,
+          "mass_kg": 0.02483454384765282,
+          "observation_bias_m": [
+            5.816943934504738e-05,
+            0.0003036895008626057,
+            0.0003098949491786745
+          ],
+          "observation_yaw_bias_rad": 0.0030861239810374523,
+          "initial_tool_offset_m": [
+            0.0032336825304437053,
+            -0.0016101991430037556,
+            0.00029048344610409487
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.2199999999997564
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.543783392105103,
+          1.5437815698452466
+        ],
+        "max_lift_hold_slip_m": 0.0014000904186259034,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7018,
+          "position_m": [
+            0.022116962691493477,
+            0.006165561709754019,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.008635658788377937,
+          "friction": 0.9908658718806407,
+          "mass_kg": 0.02483454384765282,
+          "observation_bias_m": [
+            5.816943934504738e-05,
+            0.0003036895008626057,
+            0.0003098949491786745
+          ],
+          "observation_yaw_bias_rad": 0.0030861239810374523,
+          "initial_tool_offset_m": [
+            0.0032336825304437053,
+            -0.0016101991430037556,
+            0.00029048344610409487
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.2199999999997564
+      }
+    },
+    {
+      "seed": 7019,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.543899696291533,
+          1.5438980812469953
+        ],
+        "max_lift_hold_slip_m": 0.0013729775501253436,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7019,
+          "position_m": [
+            -0.015763277163696437,
+            0.004912044788476122,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.058768169182711674,
+          "friction": 0.8400163718788816,
+          "mass_kg": 0.02327007116073529,
+          "observation_bias_m": [
+            -0.00012850897849210304,
+            7.439470510321115e-06,
+            -6.600695588633479e-05
+          ],
+          "observation_yaw_bias_rad": -0.007640447264492257,
+          "initial_tool_offset_m": [
+            0.0015103432470250748,
+            0.00012147007366624871,
+            0.00196486001464194
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5438996885130978,
+          1.543897918542449
+        ],
+        "max_lift_hold_slip_m": 0.0013731775652156375,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7019,
+          "position_m": [
+            -0.015763277163696437,
+            0.004912044788476122,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.058768169182711674,
+          "friction": 0.8400163718788816,
+          "mass_kg": 0.02327007116073529,
+          "observation_bias_m": [
+            -0.00012850897849210304,
+            7.439470510321115e-06,
+            -6.600695588633479e-05
+          ],
+          "observation_yaw_bias_rad": -0.007640447264492257,
+          "initial_tool_offset_m": [
+            0.0015103432470250748,
+            0.00012147007366624871,
+            0.00196486001464194
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      }
+    },
+    {
+      "seed": 7020,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5432360649636176,
+          1.5432334656612474
+        ],
+        "max_lift_hold_slip_m": 0.0014727140008825145,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7020,
+          "position_m": [
+            0.011515468524544173,
+            -0.014193122771678134,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.07192627415006822,
+          "friction": 0.8693127573243733,
+          "mass_kg": 0.029784293531938233,
+          "observation_bias_m": [
+            -0.00024012542689038946,
+            -7.396217988377076e-05,
+            -0.00029583930810748386
+          ],
+          "observation_yaw_bias_rad": 0.007631449300192213,
+          "initial_tool_offset_m": [
+            -6.754237262174626e-05,
+            0.0016410670788993467,
+            -0.004317072933124317
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5432360713550923,
+          1.5432334711127966
+        ],
+        "max_lift_hold_slip_m": 0.0014727622482110653,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7020,
+          "position_m": [
+            0.011515468524544173,
+            -0.014193122771678134,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.07192627415006822,
+          "friction": 0.8693127573243733,
+          "mass_kg": 0.029784293531938233,
+          "observation_bias_m": [
+            -0.00024012542689038946,
+            -7.396217988377076e-05,
+            -0.00029583930810748386
+          ],
+          "observation_yaw_bias_rad": 0.007631449300192213,
+          "initial_tool_offset_m": [
+            -6.754237262174626e-05,
+            0.0016410670788993467,
+            -0.004317072933124317
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.179999999999761
+      }
+    },
+    {
+      "seed": 7021,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5438785840007236,
+          1.543876923815536
+        ],
+        "max_lift_hold_slip_m": 0.0013797936060721,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7021,
+          "position_m": [
+            0.027658771133310306,
+            -0.027180034092196104,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.11722587959968409,
+          "friction": 0.6501670133463016,
+          "mass_kg": 0.02359215521590824,
+          "observation_bias_m": [
+            -0.0003650664660829719,
+            -0.00017457021866264526,
+            9.268809968227351e-05
+          ],
+          "observation_yaw_bias_rad": -0.012664012120622417,
+          "initial_tool_offset_m": [
+            -0.0033155486256641288,
+            -0.001821351017528431,
+            0.0016945863888869319
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.543878589562171,
+          1.5438768816688802
+        ],
+        "max_lift_hold_slip_m": 0.0013800352613878978,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7021,
+          "position_m": [
+            0.027658771133310306,
+            -0.027180034092196104,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.11722587959968409,
+          "friction": 0.6501670133463016,
+          "mass_kg": 0.02359215521590824,
+          "observation_bias_m": [
+            -0.0003650664660829719,
+            -0.00017457021866264526,
+            9.268809968227351e-05
+          ],
+          "observation_yaw_bias_rad": -0.012664012120622417,
+          "initial_tool_offset_m": [
+            -0.0033155486256641288,
+            -0.001821351017528431,
+            0.0016945863888869319
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      }
+    },
+    {
+      "seed": 7022,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5432702226624158,
+          1.543267671912429
+        ],
+        "max_lift_hold_slip_m": 0.0014686617242778528,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7022,
+          "position_m": [
+            -0.0031822572325004087,
+            -0.02867573985618463,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.011644673456397026,
+          "friction": 0.5645734065215469,
+          "mass_kg": 0.02952334190234862,
+          "observation_bias_m": [
+            4.320575470148668e-05,
+            3.368805484707684e-05,
+            -0.00020994425677829833
+          ],
+          "observation_yaw_bias_rad": -0.013953781992988605,
+          "initial_tool_offset_m": [
+            -0.002788620755867655,
+            0.004854712147477301,
+            0.003195851976192811
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.259999999999752
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.543270229021856,
+          1.5432676746971723
+        ],
+        "max_lift_hold_slip_m": 0.00146873091983029,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7022,
+          "position_m": [
+            -0.0031822572325004087,
+            -0.02867573985618463,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.011644673456397026,
+          "friction": 0.5645734065215469,
+          "mass_kg": 0.02952334190234862,
+          "observation_bias_m": [
+            4.320575470148668e-05,
+            3.368805484707684e-05,
+            -0.00020994425677829833
+          ],
+          "observation_yaw_bias_rad": -0.013953781992988605,
+          "initial_tool_offset_m": [
+            -0.002788620755867655,
+            0.004854712147477301,
+            0.003195851976192811
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      }
+    },
+    {
+      "seed": 7023,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5436689970958855,
+          1.5436669975433568
+        ],
+        "max_lift_hold_slip_m": 0.0014197573130112235,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7023,
+          "position_m": [
+            0.013676197832908521,
+            0.024105919893141523,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.10236047500497922,
+          "friction": 0.8809036849493626,
+          "mass_kg": 0.026074520434015924,
+          "observation_bias_m": [
+            4.902811665231097e-05,
+            -0.00019454977633175094,
+            -0.00026604259306650245
+          ],
+          "observation_yaw_bias_rad": -0.014515337017761374,
+          "initial_tool_offset_m": [
+            0.0044884628188705524,
+            0.0005288033071249388,
+            -0.0041286037055115275
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5436690009128238,
+          1.5436670016793022
+        ],
+        "max_lift_hold_slip_m": 0.0014198398201852962,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7023,
+          "position_m": [
+            0.013676197832908521,
+            0.024105919893141523,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.10236047500497922,
+          "friction": 0.8809036849493626,
+          "mass_kg": 0.026074520434015924,
+          "observation_bias_m": [
+            4.902811665231097e-05,
+            -0.00019454977633175094,
+            -0.00026604259306650245
+          ],
+          "observation_yaw_bias_rad": -0.014515337017761374,
+          "initial_tool_offset_m": [
+            0.0044884628188705524,
+            0.0005288033071249388,
+            -0.0041286037055115275
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.179999999999761
+      }
+    },
+    {
+      "seed": 7024,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5438224306921218,
+          1.5438206770748777
+        ],
+        "max_lift_hold_slip_m": 0.0013922199301143593,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7024,
+          "position_m": [
+            0.007123491082684688,
+            -0.020482361286923392,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.057791732656535644,
+          "friction": 0.7537620585457933,
+          "mass_kg": 0.024357180253299658,
+          "observation_bias_m": [
+            -0.00015118721223641415,
+            -0.0002204000184838372,
+            0.0003955120654563435
+          ],
+          "observation_yaw_bias_rad": 0.007102863325498476,
+          "initial_tool_offset_m": [
+            -0.004400037068288286,
+            0.003062928381141778,
+            0.0031637258373304862
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5438224366067903,
+          1.5438206791669273
+        ],
+        "max_lift_hold_slip_m": 0.0013923401329178796,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7024,
+          "position_m": [
+            0.007123491082684688,
+            -0.020482361286923392,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.057791732656535644,
+          "friction": 0.7537620585457933,
+          "mass_kg": 0.024357180253299658,
+          "observation_bias_m": [
+            -0.00015118721223641415,
+            -0.0002204000184838372,
+            0.0003955120654563435
+          ],
+          "observation_yaw_bias_rad": 0.007102863325498476,
+          "initial_tool_offset_m": [
+            -0.004400037068288286,
+            0.003062928381141778,
+            0.0031637258373304862
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      }
+    },
+    {
+      "seed": 7025,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5433040138840028,
+          1.543301510447763
+        ],
+        "max_lift_hold_slip_m": 0.0014660055246208347,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7025,
+          "position_m": [
+            0.02304385063924811,
+            0.025392876200851344,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.05634711506349696,
+          "friction": 0.9271868990798429,
+          "mass_kg": 0.029261373333446552,
+          "observation_bias_m": [
+            0.00028942920751129575,
+            0.00010217863864224057,
+            0.00014866284956707628
+          ],
+          "observation_yaw_bias_rad": -0.011800273230697031,
+          "initial_tool_offset_m": [
+            0.0009747373788594462,
+            -0.00028050474275707026,
+            -0.0030891239332568356
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.543304020637276,
+          1.5433015123303213
+        ],
+        "max_lift_hold_slip_m": 0.001466316102503512,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7025,
+          "position_m": [
+            0.02304385063924811,
+            0.025392876200851344,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.05634711506349696,
+          "friction": 0.9271868990798429,
+          "mass_kg": 0.029261373333446552,
+          "observation_bias_m": [
+            0.00028942920751129575,
+            0.00010217863864224057,
+            0.00014866284956707628
+          ],
+          "observation_yaw_bias_rad": -0.011800273230697031,
+          "initial_tool_offset_m": [
+            0.0009747373788594462,
+            -0.00028050474275707026,
+            -0.0030891239332568356
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      }
+    },
+    {
+      "seed": 7026,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5433192867654593,
+          1.543316802569285
+        ],
+        "max_lift_hold_slip_m": 0.001464311587209985,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7026,
+          "position_m": [
+            -0.026081823318187862,
+            0.01901689952722986,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.06050664658704094,
+          "friction": 0.9443501407462624,
+          "mass_kg": 0.02914165347111341,
+          "observation_bias_m": [
+            -0.00025931083885015265,
+            0.00014829255096361458,
+            -8.808949145181356e-05
+          ],
+          "observation_yaw_bias_rad": -0.002863500015837,
+          "initial_tool_offset_m": [
+            -0.00488737224665675,
+            0.0035538188256787244,
+            -0.0017853603042811118
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.543319293337293,
+          1.543316805424468
+        ],
+        "max_lift_hold_slip_m": 0.001464391105688411,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7026,
+          "position_m": [
+            -0.026081823318187862,
+            0.01901689952722986,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.06050664658704094,
+          "friction": 0.9443501407462624,
+          "mass_kg": 0.02914165347111341,
+          "observation_bias_m": [
+            -0.00025931083885015265,
+            0.00014829255096361458,
+            -8.808949145181356e-05
+          ],
+          "observation_yaw_bias_rad": -0.002863500015837,
+          "initial_tool_offset_m": [
+            -0.00488737224665675,
+            0.0035538188256787244,
+            -0.0017853603042811118
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      }
+    },
+    {
+      "seed": 7027,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5434845896310183,
+          1.5434823298123403
+        ],
+        "max_lift_hold_slip_m": 0.0014450074732834891,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7027,
+          "position_m": [
+            -0.007125662285729247,
+            -0.009105401315250429,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.10932554452460777,
+          "friction": 0.6680127927955486,
+          "mass_kg": 0.027783306582199522,
+          "observation_bias_m": [
+            -4.027881547350614e-05,
+            0.00020147214336271743,
+            -0.00032127167518932663
+          ],
+          "observation_yaw_bias_rad": 0.006969238719072134,
+          "initial_tool_offset_m": [
+            0.002389215143243112,
+            0.0026330823032502757,
+            0.0023210120533563583
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5434845944691604,
+          1.5434823321258877
+        ],
+        "max_lift_hold_slip_m": 0.0014451276741327002,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7027,
+          "position_m": [
+            -0.007125662285729247,
+            -0.009105401315250429,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.10932554452460777,
+          "friction": 0.6680127927955486,
+          "mass_kg": 0.027783306582199522,
+          "observation_bias_m": [
+            -4.027881547350614e-05,
+            0.00020147214336271743,
+            -0.00032127167518932663
+          ],
+          "observation_yaw_bias_rad": 0.006969238719072134,
+          "initial_tool_offset_m": [
+            0.002389215143243112,
+            0.0026330823032502757,
+            0.0023210120533563583
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.239999999999754
+      }
+    },
+    {
+      "seed": 7028,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5436173638870379,
+          1.5436152935937
+        ],
+        "max_lift_hold_slip_m": 0.0014274639543751168,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7028,
+          "position_m": [
+            0.003757099569031405,
+            -0.01936398365605552,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.1011560966213138,
+          "friction": 0.8698895770849913,
+          "mass_kg": 0.026580861967654662,
+          "observation_bias_m": [
+            4.486346024104175e-05,
+            4.690754514174441e-05,
+            0.00012057840216301094
+          ],
+          "observation_yaw_bias_rad": -0.003938842215789905,
+          "initial_tool_offset_m": [
+            0.004777345994998073,
+            -0.0020700892477110524,
+            -0.0007031759528323437
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.2199999999997564
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5436173702786296,
+          1.5436152959221379
+        ],
+        "max_lift_hold_slip_m": 0.0014277105987560846,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7028,
+          "position_m": [
+            0.003757099569031405,
+            -0.01936398365605552,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.1011560966213138,
+          "friction": 0.8698895770849913,
+          "mass_kg": 0.026580861967654662,
+          "observation_bias_m": [
+            4.486346024104175e-05,
+            4.690754514174441e-05,
+            0.00012057840216301094
+          ],
+          "observation_yaw_bias_rad": -0.003938842215789905,
+          "initial_tool_offset_m": [
+            0.004777345994998073,
+            -0.0020700892477110524,
+            -0.0007031759528323437
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.2199999999997564
+      }
+    },
+    {
+      "seed": 7029,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5435509226183841,
+          1.543548752445037
+        ],
+        "max_lift_hold_slip_m": 0.0014376578922858075,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7029,
+          "position_m": [
+            0.0037471081788682317,
+            0.0031477165878770544,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.09194396008408588,
+          "friction": 0.9155055716743851,
+          "mass_kg": 0.0271980624462449,
+          "observation_bias_m": [
+            -0.0003183495197484136,
+            -3.5945088523863813e-06,
+            -0.00039903651360909044
+          ],
+          "observation_yaw_bias_rad": 0.012906362047747564,
+          "initial_tool_offset_m": [
+            0.0030956542893456054,
+            0.000801435077532363,
+            -0.003253553723479051
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5435509279098738,
+          1.5435487581435674
+        ],
+        "max_lift_hold_slip_m": 0.0014378585601852905,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7029,
+          "position_m": [
+            0.0037471081788682317,
+            0.0031477165878770544,
+            0.0127
+          ],
+          "cube_yaw_rad": -0.09194396008408588,
+          "friction": 0.9155055716743851,
+          "mass_kg": 0.0271980624462449,
+          "observation_bias_m": [
+            -0.0003183495197484136,
+            -3.5945088523863813e-06,
+            -0.00039903651360909044
+          ],
+          "observation_yaw_bias_rad": 0.012906362047747564,
+          "initial_tool_offset_m": [
+            0.0030956542893456054,
+            0.000801435077532363,
+            -0.003253553723479051
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      }
+    },
+    {
+      "seed": 7030,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5438029231660217,
+          1.5438011329902248
+        ],
+        "max_lift_hold_slip_m": 0.0013961580867347396,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7030,
+          "position_m": [
+            -0.020889775819396623,
+            -0.02338636981198995,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.061467489332668435,
+          "friction": 0.5388240888677645,
+          "mass_kg": 0.02460020640437198,
+          "observation_bias_m": [
+            -5.693442111918918e-05,
+            -0.00022051954993160692,
+            -0.00028879961867659114
+          ],
+          "observation_yaw_bias_rad": 0.011981202584329675,
+          "initial_tool_offset_m": [
+            0.0037878058368578946,
+            -0.0010325220531148035,
+            -0.0018530443197214098
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.2199999999997564
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5438029277594008,
+          1.5438011369521045
+        ],
+        "max_lift_hold_slip_m": 0.0013961831484043776,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7030,
+          "position_m": [
+            -0.020889775819396623,
+            -0.02338636981198995,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.061467489332668435,
+          "friction": 0.5388240888677645,
+          "mass_kg": 0.02460020640437198,
+          "observation_bias_m": [
+            -5.693442111918918e-05,
+            -0.00022051954993160692,
+            -0.00028879961867659114
+          ],
+          "observation_yaw_bias_rad": 0.011981202584329675,
+          "initial_tool_offset_m": [
+            0.0037878058368578946,
+            -0.0010325220531148035,
+            -0.0018530443197214098
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.1999999999997586
+      }
+    },
+    {
+      "seed": 7031,
+      "expert": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5435936080264905,
+          1.5435915033674519
+        ],
+        "max_lift_hold_slip_m": 0.0014310736073128315,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7031,
+          "position_m": [
+            -0.00346996790620914,
+            -0.009851791348485236,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.14782957098843721,
+          "friction": 0.6577960676121614,
+          "mass_kg": 0.026805563854678787,
+          "observation_bias_m": [
+            0.00018998462494783489,
+            -0.00019957108039205977,
+            8.140466182549923e-05
+          ],
+          "observation_yaw_bias_rad": 0.00020656576598081233,
+          "initial_tool_offset_m": [
+            -0.0031745693297547052,
+            0.004035462383231094,
+            0.003628961891129737
+          ]
+        },
+        "controller": "scripted_expert",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.259999999999752
+      },
+      "learned": {
+        "success": true,
+        "reason": "",
+        "hold_samples": 50,
+        "hold_contact_valid": true,
+        "min_hold_normal_forces_n": [
+          1.5435936141678728,
+          1.5435915057165395
+        ],
+        "max_lift_hold_slip_m": 0.0014313617743629777,
+        "solver_warnings": {},
+        "parameters": {
+          "seed": 7031,
+          "position_m": [
+            -0.00346996790620914,
+            -0.009851791348485236,
+            0.0127
+          ],
+          "cube_yaw_rad": 0.14782957098843721,
+          "friction": 0.6577960676121614,
+          "mass_kg": 0.026805563854678787,
+          "observation_bias_m": [
+            0.00018998462494783489,
+            -0.00019957108039205977,
+            8.140466182549923e-05
+          ],
+          "observation_yaw_bias_rad": 0.00020656576598081233,
+          "initial_tool_offset_m": [
+            -0.0031745693297547052,
+            0.004035462383231094,
+            0.003628961891129737
+          ]
+        },
+        "controller": "learned",
+        "simulation_scope": "isolated_dynamic_gripper",
+        "duration_s": 3.259999999999752
+      }
+    }
+  ]
+}

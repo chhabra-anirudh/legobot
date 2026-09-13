@@ -11,8 +11,8 @@ and 24 working hours. Adjust the schedule to actual robot access and event rules
 A user describes a small structure, in words or by handing over a picture. An LLM
 proposes a voxel model. A deterministic compiler checks the model against
 inventory, support, workspace, and gripper clearance, then produces a placement
-sequence. The robot builds it with magnetic blocks 2 inches across and 1 inch tall
-(50.8 x 50.8 x 25.4 mm) using one finger gripper.
+sequence. The robot builds it with one-inch magnetic cubes
+(25.4 x 25.4 x 25.4 mm) using one finger gripper.
 
 `build_from_description.py` is the demo entry point: one command from the
 description to the simulated build.
@@ -47,8 +47,7 @@ Do not promise arbitrary 3D models.
 ## Current implementation: what is actually working
 
 - The existing URDF is loaded in Rerun, with a left-arm damped-least-squares IK solver.
-- Blocks are 50.8 mm across and 25.4 mm tall according to the user (they were
-  25.4 mm cubes until 2026-09-13; older notes below assume that).
+- Blocks remain one-inch cubes (25.4 mm on every axis), per the user's latest instruction.
 - Three cubes follow a scripted stacking sequence; both fingers animate using the
   URDF mimic relationship. Five numerical tests pass for the current configuration.
 - Grasp angles, tool grasp point, table, and supply coordinates are provisional.

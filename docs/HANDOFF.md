@@ -1,14 +1,16 @@
 # Live handoff — start here
 
-Updated 2026-09-12. Active work: robotics/simulation and first hardware
-execution. **Everything below is merged and pushed to `main` (8f083e3)** —
-start new work from `main`, not from a feature branch. Individual owners are unassigned.
+Updated 2026-09-13. Active work: robotics/simulation and first hardware
+execution. Latest upstream changes through `f92de7e` are integrated in the local
+feature checkout. The one-inch override and learning milestones are recorded
+on `codex/pickup-training-milestone`; they have not been pushed. Individual owners are unassigned.
 
 **New here? Read [ROBOT_SETUP.md](ROBOT_SETUP.md) first** — setup, the full run
 recipe, hardware calibration numbers, the bbos interface reference, and the traps.
 This file is the running log.
 
-**Newest section is [2 inch blocks, the chassis in the workspace, and the 0.78 m table](#2-inch-blocks-the-chassis-in-the-workspace-and-the-078-m-table-2026-09-13)**. For hardware, the current
+**Current override: blocks remain one-inch cubes, per explicit user instruction.**
+The two-inch proposal below is historical; retain the chassis and planner fixes. For hardware, the current
 section is [First hardware execution](#first-hardware-execution-the-build-trajectory-on-the-real-arm-2026-09-12) — the arm has been driven from the simulated
 plan. Earlier sections describe older states and are kept for history; where they
 disagree, the newer section is current.
@@ -24,9 +26,9 @@ The shared source of truth is this repository. `main` includes the gripper geome
 and offline-plan merges (2646ccf), plus `feat/contact-grasp` through 9ec4dea:
 contact physics and its nominal release fix are now integrated into local `main`.
 
-- **Blocks are 2 inches across and 1 inch tall** (`block_size_m` `[0.0508, 0.0508,
-  0.0254]`), jaw grasp 0.36 rad and open 0.50 rad. The grasp angle is derived, not
-  measured on hardware. Older sections below describe the 1 inch cube.
+- **Blocks remain one-inch cubes** (`block_size_m` `[0.0254, 0.0254, 0.0254]`).
+  The prior one-inch 0.21 grasp / 0.35 open hardware/planner settings are restored.
+  The learning experiment uses separate provisional physics commands.
 - **Kinematic assembly:** actual URDF, left-arm FK/IK, three cubes, animated
   mimic fingers, 396 frames. Cube attachment remains idealized in this old replay.
 - **Geometry tools:** triangle-clipped jaw-envelope report and physical calibration
@@ -118,8 +120,8 @@ normal execution. See [CONTACT_SIM.md](CONTACT_SIM.md) and
 
 | Priority | Next concrete outcome | Owner |
 | --- | --- | --- |
-| 0 | **Bring the table down from 0.78 m.** At 0.78 m only a single row of six blocks is buildable: 146 mapped cells against 542 at 0.5 m, measured over a window wide enough to rule out clipping. Nothing else on this list matters at that height | Hardware, unassigned |
-| 0 | **Measure the 2 inch grasp angle on hardware.** `gripper_grasp_rad = 0.36` is derived from the mesh report plus the foam allowance measured on the 1 inch cube. Repeat the 0.2301 measurement with a real 2 inch block | Hardware, unassigned |
+| 0 | **Verify the table pose and reachable build area for one-inch cubes.** Recheck the selected structure and staging against the measured map; the historical two-inch row counts do not apply | Hardware, unassigned |
+| 0 | **Verify the one-inch grasp on hardware.** Retain the prior 0.21 grasp / 0.35 open commands pending supervised calibration | Hardware, unassigned |
 | 0 | **Stage the blocks and run a real build.** Coordinates are in `outputs/dog-plan.json` under `staging`. Runs so far used an empty table, so nothing has verified that a commanded close actually picks a cube up | Hardware/robotics, unassigned |
 | 0 | Add a held-cube check. Gripper current is already published in `arm_state`, and the J7 relief loop's holding current is a natural signal: a close that reaches the commanded angle with no current rise means an empty jaw | Robotics, unassigned |
 | 0 | **Run the model paths once with a real key.** `ANTHROPIC_API_KEY` is not set in this checkout, so every design so far is a library shape or an in-session reply. One key, then `build_from_description.py "a cat"` and the picture path, and record how often a first proposal passes the checks | Compiler, unassigned |
@@ -143,7 +145,7 @@ slip, then add failure-aware transitions. Do not train on perfect-state
 diagnostic traces unchanged or call the old idealized replay a physical grasp.
 Assume no robot access until confirmed; hardware work need not block simulation.
 
-## 2 inch blocks, the chassis in the workspace, and the 0.78 m table (2026-09-13)
+## Historical two-inch proposal — size superseded by user instruction (2026-09-13)
 
 Offline work, on `main`. Three things here matter more than the rest: **the reach map
 was placing cubes inside the robot**, the **0.78 m table cannot be built on**, and the
@@ -714,3 +716,113 @@ New recordings are required to see the changes. `.gitattributes` now preserves
 URDF LF bytes for Windows checkouts, addressing the teammate's WSL hash issue.
 (This branch was merged into main on 2026-09-12.) Next: calibrate foam and heavy-load
 slip, then failure-aware control and demonstration contracts.
+
+## Active simulation learning work (2026-09-13)
+
+Owner: Codex, branch `feat/simulation-trained-build`. User goal: train in contact
+simulation and build checked structures produced by the image-input pipeline.
+Scope includes successful expert demonstrations, episode-separated behavior
+cloning and held-out rollout evaluation, learned pickup integrated with physical
+multi-cube placement, and a guarded path to the real robot. Existing animation
+success is not evidence for this goal. Hardware verification remains a separate
+required gate; do not execute the real arm from an unvalidated learned policy.
+Current task: step-based contact environment and explicit observation/action
+contract, reusing the existing URDF joints and foam collision proxies unchanged.
+
+### Remote integration into the learning branch (2026-09-13)
+
+Fast-forwarded `feat/simulation-trained-build` to `origin/main` at f92de7e,
+then reapplied all local learning work without conflicts. A named backup stash is
+retained. Upstream changes include chassis exclusion, expanded reach maps,
+quarter-turn planning, and 50.8 x 50.8 x 25.4 mm blocks.
+The local learning environment and checkpoints still model 25.4 mm cubes.
+`build_learned.py` now rejects the new dimensions explicitly rather than simulate
+a small cube while claiming to build the new larger block. The next required task
+is contact validation for the new block size, then retraining and full-build tests.
+Legacy v1 pickup test: 32/32, but the full cat build failed on neighboring blocks.
+The v2 0.26 rad opening passed 16/16 validation pickups and a four-placement
+2-layer trial, whose report failed serialization (fixed locally afterward).
+The larger cat expert trial stopped at placement 17; these are development
+results, not a completed construction milestone or evidence for the new blocks.
+
+
+### Explicit one-inch override after integration (2026-09-13)
+
+The user rejected the incoming block-size change. Restored one-inch dimensions,
+compiler schema, one-inch example designs and generation defaults, and the prior
+hardware/planner jaw commands. Retained chassis exclusion, expanded reach maps,
+quarter-turn placement, and declared disconnected pieces. No URDF axes or meshes
+changed. Two-inch size/area/angle claims earlier in this file are superseded.
+The local learned checkpoint remains a one-inch experiment; old layout build
+results are still development evidence and must be rerun with the new base filter.
+
+### One-inch override verification (2026-09-13)
+
+Blocks are 25.4 mm on all axes in the assembly configuration, compiler contract,
+and example structures. Prior 0.21 grasp / 0.35 open planner settings restored.
+Upstream chassis exclusion and rotation planning retained; URDF unchanged.
+Compiler: 52/52 tests pass. Basic simulation check: 409 joint-limited poses pass.
+Full sim suite: 64/67 pass. Outstanding: carried tilt 33.54 degrees exceeds the
+unchanged 30-degree bound; facing and free selection coincide for the small line;
+staging output does not put its outermost slot first within the asserted 1 mm.
+Next: resolve these planner regressions for the one-inch layout before committing
+the integration. No hardware validation is implied by these kinematic checks.
+
+### Learned pickup connected to current image planner (2026-09-13)
+
+The learning runner now shares `choose_placement` with `build_structure.py`,
+uses the chassis-filtered reach map, and retains quarter-turn selection. Its
+plan records excluded map cells, IK pose count/restarts and carried tilt.
+`sim/build_learned.py --image` compiles a picture using the existing deterministic
+trace pipeline, preserving source-image hash and simplification provenance.
+The input grid is explicit; no automatic reduction to fit the arm was added.
+
+Verification: all 10 learning tests pass, including chassis exclusion for supply
+and targets and image provenance/dimensions. `git diff --check` passes. The three
+previously recorded broader planner failures remain unresolved.
+
+Current development checkpoint: `outputs/pickup-v2/policy.npz`, SHA256
+`1631c70a7472f8a5b918a1e23a718abcf03f7859fe13fade357f5a4d7d01b047`.
+One-inch cube sizes, URDF and physics source unchanged in this milestone.
+- Two-layer, four-cube fixture: all four finish physically stable; maximum final
+  error 0.405 mm. This is hand-authored, not image-derived.
+- Direct cat picture, default 10x8 trace: compiler produces 17 cubes; nine finish,
+  then cube 10 wedges/tips during descent (16.33 mm final error).
+- Existing vision-derived 36-cube cat: 15 finish; cube 16 tips during descent
+  (7.23 mm final error).
+- Both failures passed learned pickup/one-second hold. Tilt before descent was
+  0.31/0.50 degrees; after descent 30.28/43.88 degrees. Solver warnings were empty.
+  This points to contact-aware placement beside existing cubes, not pickup labels.
+
+Compact evidence is in `docs/learned_build_development_results.json`; complete
+plans/traces/results remain ignored under `outputs/learned-*-current`.
+This is learned pickup with scripted Cartesian placement in gripper/cube physics.
+It does not yet execute the full-arm trajectory in contact or prove hardware
+construction. Next: diagnose adjacent-cube insertion contacts and develop/train
+feedback placement, while retaining the original 3 mm/5 degree success gates.
+Then evaluate on fresh held-out scenarios and complete arm/hardware integration.
+
+Direct image development command:
+```
+OPENBLAS_NUM_THREADS=1 .venv/bin/python sim/build_learned.py compiler/examples/images/cat.png --image --policy outputs/pickup-v2/policy.npz --output outputs/learned-direct-image-current
+```
+
+### Pickup simulation gate passed (2026-09-13)
+
+The frozen pickup-v2 checkpoint passed 32/32 fresh randomized test episodes
+(seeds 7000–7031), matching expert 32/32. Fresh seeds were reserved against the
+checkpoint/physics hashes before evaluation because original test seeds had been
+used in prior development. The unchanged 90%/10-point-gap gate passes. Full
+training summary, scope limits and ordered next work: `PICKUP_TRAINING.md`.
+Per-episode evidence: `pickup_evaluation_results.json`. All 10 learning tests pass.
+The overall goal remains incomplete: contact-aware placement, full-arm contact,
+perception/hardware integration and repeated complete image builds remain.
+
+### Commit verification (2026-09-13)
+
+User requested all pending work on a new branch: `codex/pickup-training-milestone`.
+Pre-commit checks: full sim suite 66/69 pass (the three documented carried-tilt,
+facing-selection and staging-order failures remain); compiler suite 52/52 pass;
+`python sim/simulate_assembly.py --check` validates 409 joint-limited poses;
+`git diff --check` passes. All 10 learning tests are included in the passing tests.
+Generated checkpoints, datasets and recordings remain ignored and local.

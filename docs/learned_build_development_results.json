@@ -1,0 +1,98 @@
+{
+  "status": "development results, not held-out reliability or hardware validation",
+  "reports": {
+    "learned-two-layer-current": {
+      "success": true,
+      "controller": "learned_pickup_scripted_placement",
+      "scope": "dynamic gripper and all free cubes; no full-arm collision/dynamics or magnetic model",
+      "seed": 5000,
+      "structure_sha256": "a2eb6e4a4875e683829902f90c02d70eefc317c21ce720c919129d70a4cfddfd",
+      "policy_sha256": "1631c70a7472f8a5b918a1e23a718abcf03f7859fe13fade357f5a4d7d01b047",
+      "requested_cubes": 4,
+      "completed_cubes": 4,
+      "solver_warnings": {},
+      "max_completed_final_error_m": 0.000404264678870078,
+      "failed_placement": null
+    },
+    "learned-direct-image-current": {
+      "success": false,
+      "controller": "learned_pickup_scripted_placement",
+      "scope": "dynamic gripper and all free cubes; no full-arm collision/dynamics or magnetic model",
+      "seed": 5000,
+      "structure_sha256": "bac49f76206a819b6cb18519bb4d746e9db6b0c9012ded328fa9dba136f7ae0c",
+      "policy_sha256": "1631c70a7472f8a5b918a1e23a718abcf03f7859fe13fade357f5a4d7d01b047",
+      "requested_cubes": 17,
+      "completed_cubes": 9,
+      "solver_warnings": {},
+      "max_completed_final_error_m": 0.002828381303726162,
+      "failed_placement": {
+        "step": 10,
+        "voxel": [
+          4,
+          1,
+          0
+        ],
+        "color": "orange",
+        "pickup": {
+          "success": true,
+          "reason": "",
+          "hold_samples": 50,
+          "hold_contact_valid": true,
+          "min_hold_normal_forces_n": [
+            1.543207471641858,
+            1.543204833010223
+          ],
+          "max_lift_hold_slip_m": 0.0014750910657888193,
+          "solver_warnings": {}
+        },
+        "success": false,
+        "reason": "transport_or_placement_failed",
+        "placement_error_m": 0.01633008736236693,
+        "final_speed_m_s": 0.00044371977430738766,
+        "final_tilt_rad": 0.5961459651020317,
+        "max_pick_transport_slip_m": 0.015501033153274299,
+        "finger_table_collision": false
+      }
+    },
+    "learned-image-cat-current": {
+      "success": false,
+      "controller": "learned_pickup_scripted_placement",
+      "scope": "dynamic gripper and all free cubes; no full-arm collision/dynamics or magnetic model",
+      "seed": 5000,
+      "structure_sha256": "fc5ddcaf1c510142c278ab7009bc78fa56f5c00c4071475b0e4acc8e790ab314",
+      "policy_sha256": "1631c70a7472f8a5b918a1e23a718abcf03f7859fe13fade357f5a4d7d01b047",
+      "requested_cubes": 36,
+      "completed_cubes": 15,
+      "solver_warnings": {},
+      "max_completed_final_error_m": 0.000377690607072585,
+      "failed_placement": {
+        "step": 16,
+        "voxel": [
+          5,
+          2,
+          0
+        ],
+        "color": "orange",
+        "pickup": {
+          "success": true,
+          "reason": "",
+          "hold_samples": 50,
+          "hold_contact_valid": true,
+          "min_hold_normal_forces_n": [
+            1.5432074716584951,
+            1.5432048330877373
+          ],
+          "max_lift_hold_slip_m": 0.0014754685048112529,
+          "solver_warnings": {}
+        },
+        "success": false,
+        "reason": "transport_or_placement_failed",
+        "placement_error_m": 0.00723062092489797,
+        "final_speed_m_s": 6.909518694731502e-05,
+        "final_tilt_rad": 0.7483710253347452,
+        "max_pick_transport_slip_m": 0.00632443410688116,
+        "finger_table_collision": false
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "structure_id": "two-layer-bar",
+  "name": "Four-cube two-layer validation bar",
+  "cube_size_m": 0.0254,
+  "source": "hand_authored_validation_fixture",
+  "prompt": "Two adjacent columns, two cubes high, for physical construction validation",
+  "voxels": [
+    {"x": 0, "y": 0, "z": 0, "color": "blue"},
+    {"x": 1, "y": 0, "z": 0, "color": "blue"},
+    {"x": 0, "y": 0, "z": 1, "color": "orange"},
+    {"x": 1, "y": 0, "z": 1, "color": "orange"}
+  ]
+}
