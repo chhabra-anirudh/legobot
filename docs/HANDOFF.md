@@ -111,6 +111,69 @@ slip, then add failure-aware transitions. Do not train on perfect-state
 diagnostic traces unchanged or call the old idealized replay a physical grasp.
 Assume no robot access until confirmed; hardware work need not block simulation.
 
+## Reach-checked build origins, and the transfer tilt (2026-09-13)
+
+Offline work; the robot was in use by another team. On `main`.
+
+### The planner now gates the build area on the reach map
+
+Previously the reach map was consulted for **staging slots only**. Build cells
+went straight to the IK solver, so an origin that did not fit the workspace
+surfaced as a bare `IK failed at [0.3724, 0.3328, 0.8408]` with no hint that the
+origin was the problem. `sim/build_structure.py` now:
+
+- pre-filters every footprint column against the reach map before any IK, and on
+  failure names the offending columns **and suggests origins that fit**;
+- makes `--origin` optional. Omitted, it derives an origin from the measured map,
+  ranked by margin — how much reachable padding surrounds the tightest column, so
+  the build survives calibration error — and prints what it chose. A hardcoded
+  default rots every time the table moves, which is exactly what happened at 0.75 m;
+- adds `--list-origins`. The 16-cube dog has **137** valid origins at 0.5 m.
+
+The check is a pre-filter matched against the nearest lattice sample, so an origin
+need not lie on the lattice; the IK solve remains the authority. `reach_map.load_full`
+exposes the map's sample spacing, which that tolerance needs. `load` is unchanged.
+
+### `build_structure.py` had no tests; now it has 15
+
+This is the module that generates the joint path streamed to the real arm, and it
+was the only major module with no test file. `sim/test_build_structure.py` covers
+reach gating and origin ranking, and asserts the properties a bad plan would
+violate: every pose inside the arm's **calibrated** limits, one step per cube,
+support placed before what rests on it, gripper angle in range, `tool_target_m`
+consistent with the rotated grasp point, byte-identical re-export, and a rejected
+plan leaving no trajectory file behind.
+
+### Finding: transfers tilt the carried cube up to 25.5 degrees
+
+Writing those tests turned up something the existing checks missed. Measured over
+the 16-cube dog:
+
+| Phase | Max tool tilt from vertical |
+| --- | --- |
+| descend, close, attach, place, release, open | **< 0.03 deg** |
+| lift, retreat | < 0.03 deg |
+| approach | 19.5 deg |
+| **transfer (carrying a cube)** | **25.5 deg** |
+
+104 of the 632 carrying frames exceed 10 degrees. This follows from `move_joint`
+interpolating in joint space: that keeps every intermediate pose reachable, which
+is why it is used, but it does not hold the tool vertical. Grasp-critical phases
+use `move`, which IK-solves each waypoint, and they are vertical.
+
+**Idealized attachment is why nobody noticed.** The simulation carries the cube
+rigidly, so it cannot drop one. Two foam pads holding a cube by friction at 25
+degrees is a different question, and an open one. The bound is asserted in the
+test suite so it cannot quietly grow.
+
+Next on this track: decide whether the tilt matters — either hold the tool vertical
+through transfers, or show the grip survives it in the contact simulation, which
+does model friction. Do not "fix" it by reverting transfers to Cartesian
+interpolation without re-checking reachability; that is what joint-space
+interpolation was introduced to solve.
+
+Verified: **41 sim tests** (26 before) and 22 compiler tests pass.
+
 ## Merged to main (2026-09-12)
 
 `fix/assembly-centered-grasp` fast-forwarded into `main` at **8f083e3** and pushed.
@@ -226,11 +289,10 @@ uv run build_bridge.py dog-trajectory.json --gripper       # dry run, no writer
 uv run build_bridge.py dog-trajectory.json --gripper --execute
 ```
 
-`--origin` is **required** and was previously recorded nowhere.
-`build_structure.py`'s default `[.22, .30]` does not fit the reachable area and
-fails with a bare `IK failed at ...`. The reach map is consulted for staging slots
-but **not** for build cells, so an out-of-reach origin surfaces as a confusing
-solver error instead of "this origin does not fit". Worth fixing.
+`--origin` was required and recorded nowhere; the old default `[.22, .30]` did not
+fit the reachable area and failed with a bare `IK failed at ...`. **Fixed 2026-09-13**
+— see "Reach-checked build origins" below. Omitting `--origin` now derives one from
+the measured reach map.
 
 Prefer an origin that plans with **no cold IK restarts** — the planner reports
 them, and they mean the joint path may jump. `0.15 0.2008` is clean at a 0.5 m table.

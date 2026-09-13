@@ -330,9 +330,10 @@ Updated 2026-09-12, after the first hardware executions. Ordered.
 2. **Stage cubes and verify one real pick.** Coordinates are in the exported
    placement plan under `staging`. Confirm the jaw acquires a cube during the arm's
    own motion, not just when hand-closed.
-3. **Check build cells against the reach map** in `sim/build_structure.py` and make
-   a working `--origin` the default. An out-of-reach origin currently fails as a
-   bare `IK failed at [...]`.
+3. ~~Check build cells against the reach map~~ — **done 2026-09-13.** The planner
+   pre-filters the footprint, auto-selects an origin from the measured map when
+   none is given, and suggests fitting origins when one is rejected.
+   `sim/build_structure.py` also gained its first test suite.
 4. **Teach a real `table_surface` pose** to replace the set-by-hand 0.5 m table
    height. Reach is extremely sensitive to it: 0.75 m gives 95 reachable cells and
    6 valid build origins, 0.5 m gives 246 and 133.
@@ -341,6 +342,11 @@ Updated 2026-09-12, after the first hardware executions. Ordered.
    the frozen training contract does not. Depends on 1.
 6. Train the first behavior-cloning model only once demonstrations reflect a
    physically successful grasp.
+7. **Decide whether the 25.5 degree transfer tilt matters.** Joint-space transfers
+   do not hold the tool vertical while a cube is carried. Idealized attachment
+   hides it; friction between two foam pads may not. Check it in the contact
+   simulation before assuming it is fine, and do not revert to Cartesian
+   interpolation without re-checking reachability.
 
 The source document's visibility-aware color allocation is a useful later polish
 item, not a first-day dependency. Keep three or fewer supply colors, fixed pickup

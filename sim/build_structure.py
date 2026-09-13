@@ -41,6 +41,68 @@ def cell_centre(cell, c, calibration):
                      c['table_height_m'] + (z+.5)*calibration['layer_height_m']])
 
 
+def footprint_xy(structure, c, calibration):
+    """{(x, y) voxel column: root-frame XY of its cube centre}, rounded to the map."""
+    return {(v.x, v.y): tuple(np.round(cell_centre((v.x, v.y, 0), c, calibration)[:2], 4))
+            for v in structure.voxels}
+
+
+def unreachable_columns(structure, c, calibration, reach, pitch):
+    """Footprint columns whose cube centre is outside the measured reach.
+
+    The reach map is a lattice of probed points, so this compares against the
+    nearest sample rather than demanding an exact hit: an origin need not sit on
+    the lattice. That makes this a **pre-filter with a useful error message**,
+    not the authority — the IK solve in `plan_build` is still what decides.
+
+    The map is probed at cube-centre positions with the tool grasp offset already
+    applied, so comparing cube centres here is the right comparison.
+    """
+    tol = pitch/2
+    out = []
+    for column, (x, y) in sorted(footprint_xy(structure, c, calibration).items()):
+        if not any(abs(rx-x) <= tol and abs(ry-y) <= tol for rx, ry in reach):
+            out.append((column, (x, y)))
+    return out
+
+
+def candidate_origins(structure, c, calibration, reach, pitch, limit=None):
+    """Lattice origins where the whole footprint lands in reach, best first.
+
+    Ranked by margin: how far the tightest footprint column sits from the edge of
+    the reachable set, in cells. A build with room around it survives calibration
+    error; one hugging the boundary does not. Ties break on lower y then lower x
+    so the result is deterministic.
+    """
+    columns = [(v.x, v.y) for v in structure.voxels]
+    xs = sorted({x for x, _ in reach})
+    ys = sorted({y for _, y in reach})
+    scored = []
+    for ox in xs:
+        for oy in ys:
+            cells = [(round(ox + cx*pitch, 4), round(oy + cy*pitch, 4))
+                     for cx, cy in columns]
+            if not all(cell in reach for cell in cells):
+                continue
+            margin = min(_margin(cell, reach, pitch) for cell in cells)
+            scored.append((-margin, oy, ox, [ox, oy]))
+    scored.sort()
+    return [origin for _, _, _, origin in scored][:limit]
+
+
+def _margin(cell, reach, pitch, cap=4):
+    """Cells of reachable padding around `cell`, capped so ranking stays cheap."""
+    x, y = cell
+    for ring in range(1, cap+1):
+        for dx in range(-ring, ring+1):
+            for dy in range(-ring, ring+1):
+                if max(abs(dx), abs(dy)) != ring:
+                    continue
+                if (round(x+dx*pitch, 4), round(y+dy*pitch, 4)) not in reach:
+                    return ring-1
+    return cap
+
+
 def staging_layout(structure, c, calibration, reach):
     """Place every cube on the table before the build starts, sorted by color.
 
@@ -98,6 +160,23 @@ def plan_build(structure, c, arm, calibration, reach):
             f'that touch, a cube whose in-layer neighbours are already placed cannot '
             f'be reached. Use a structure that is one cube wide, or change the '
             f'placement strategy.')
+
+    pitch = float(calibration['pitch_m'][0])
+    missing = unreachable_columns(structure, c, calibration, reach, pitch)
+    if missing:
+        cells = ', '.join(f'{col} at ({xy[0]:.4g}, {xy[1]:.4g})' for col, xy in missing[:4])
+        more = f' and {len(missing)-4} more' if len(missing) > 4 else ''
+        suggestions = candidate_origins(structure, c, calibration, reach, pitch, limit=3)
+        advice = ('  Try: ' + '  '.join(f'--origin {o[0]} {o[1]}' for o in suggestions)
+                  if suggestions else
+                  '  No origin fits this structure in the measured reach. Use a smaller '
+                  'structure, or lower the table: reach shrinks sharply near the top of '
+                  'the vertical travel.')
+        raise ValueError(
+            f'{len(missing)} of {len(footprint_xy(structure, c, calibration))} build '
+            f'columns fall outside the arm\'s measured reach at origin '
+            f'({calibration["origin_xy_m"][0]:.4g}, {calibration["origin_xy_m"][1]:.4g}): '
+            f'{cells}{more}.\n{advice}')
 
     travel_z = (c['table_height_m'] + calibration['layer_height_m']*(structure_height(structure)+1)
                 + c['clearance_m'])
@@ -312,8 +391,11 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument('structure', help='checked structure JSON from the compiler')
     parser.add_argument('--config', type=Path, default=HERE/'assembly_config.json')
-    parser.add_argument('--origin', type=float, nargs=2, default=[.22, .30],
-                        help='root-frame XY of voxel cell (0,0), metres')
+    parser.add_argument('--origin', type=float, nargs=2, default=None,
+                        help='root-frame XY of voxel cell (0,0), metres. Omit to pick '
+                             'the best-fitting origin from the measured reach map.')
+    parser.add_argument('--list-origins', action='store_true',
+                        help='print origins that fit this structure, best first, and exit')
     parser.add_argument('--pitch', type=float, default=None,
                         help='centre-to-centre cube pitch in metres (default: nominal cube size)')
     parser.add_argument('--check', action='store_true', help='plan only, no viewer or recording')
@@ -336,12 +418,46 @@ def main(argv=None):
             print(f'  {problem}', file=sys.stderr)
         return 1
     pitch = args.pitch if args.pitch else float(c['block_size_m'][0])
-    calibration = {'origin_xy_m': np.array(args.origin, dtype=float),
+    calibration = {'origin_xy_m': np.zeros(2),
                    'pitch_m': np.array([pitch, pitch]),
                    'layer_height_m': float(c['block_size_m'][2])}
 
     try:
         reach = reach_map.load(float(c['table_height_m']))
+        if args.list_origins:
+            fits = candidate_origins(structure, c, calibration, reach, pitch)
+            print(f'{len(fits)} origins fit this structure at a '
+                  f'{c["table_height_m"]} m table, best margin first:')
+            for origin in fits[:20]:
+                print(f'  --origin {origin[0]} {origin[1]}')
+            return 0 if fits else 2
+        if args.origin is None:
+            # A hardcoded default silently rots whenever the table moves, so
+            # derive one from the measured reach instead and say which was used.
+            fits = candidate_origins(structure, c, calibration, reach, pitch)
+            if not fits:
+                raise ValueError(
+                    'no origin places this structure inside the measured reach at a '
+                    f'{c["table_height_m"]} m table. Use a smaller structure, or lower '
+                    'the table: reach shrinks sharply near the top of the vertical travel.')
+            chosen = None
+            for origin in fits:
+                calibration['origin_xy_m'] = np.array(origin, dtype=float)
+                try:
+                    staging_layout(structure, c, calibration, reach)
+                except ValueError:
+                    continue      # fits the reach but leaves no room to stage cubes
+                chosen = origin
+                break
+            if chosen is None:
+                raise ValueError(
+                    f'{len(fits)} origins place this structure inside the measured reach, '
+                    f'but none leaves enough isolated slots beside it to stage '
+                    f'{len(structure.voxels)} cubes. Use a smaller structure or a lower table.')
+            print(f'origin not given; chose --origin {chosen[0]} {chosen[1]} '
+                  f'from the reach map ({len(fits)} fit; --list-origins shows them).')
+        else:
+            calibration['origin_xy_m'] = np.array(args.origin, dtype=float)
         frames, steps, staged, cold, plan = plan_build(structure, c, arm, calibration, reach)
     except (ValueError, FileNotFoundError) as exc:
         print(f'Cannot execute this structure: {exc}', file=sys.stderr)

@@ -39,6 +39,12 @@ with zero joint-range violations.
 - **No collision checking** of the arm against the table, itself, or the structure.
   Transfers interpolate in joint space, which keeps poses reachable but traces an
   unchecked curve.
+- **Transfers tilt the carried cube up to 25.5 degrees.** Joint-space interpolation
+  holds reachability, not tool orientation. Every grasp-critical phase (descend,
+  close, place, release) is vertical to within 0.03 degrees, but 104 of the 632
+  carrying frames exceed 10 degrees of tilt. Idealized attachment means the
+  simulation never drops anything; two foam pads holding a cube by friction might.
+  Locked in by `sim/test_build_structure.py` so it cannot quietly get worse.
 - **No vision**, no magnetic model, no learned policy in the hardware path.
 - **Table height is a set value, not a survey.** See §6.
 
@@ -103,11 +109,14 @@ If `probe_arm.py` reports no state, check the daemon is running:
 .venv/bin/python compiler/generate.py "a simple dog" --output outputs/dog.json
 .venv/bin/python compiler/check.py compiler/examples/dog.json --order
 
-# 2. Plan and export. --origin is REQUIRED; the default does not fit the workspace.
+# 2. Plan and export. Omit --origin and the planner picks one from the reach map.
 .venv/bin/python sim/build_structure.py compiler/examples/dog.json --check \
-    --origin 0.15 0.2008 \
     --export-trajectory outputs/dog-trajectory.json \
     --export outputs/dog-plan.json --coords
+
+# Pin the origin instead, or see what else fits:
+.venv/bin/python sim/build_structure.py compiler/examples/dog.json --check --origin 0.15 0.2008
+.venv/bin/python sim/build_structure.py compiler/examples/dog.json --list-origins
 
 # 3. Ship it
 scp -o ControlPath=~/.ssh/claude-%C outputs/dog-trajectory.json \
@@ -120,6 +129,26 @@ uv run build_bridge.py dog-trajectory.json --gripper --execute
 
 The trajectory is deterministic: regenerating it from the same structure, config,
 and origin gives a **byte-identical** file. Verified by sha256 against the robot's copy.
+
+### Choosing the build origin
+
+`--origin` is the root-frame XY of voxel cell (0,0). **Omit it and the planner
+derives one from the measured reach map**, ranked so the build sits as far from
+the edge of the reachable set as possible, then prints what it chose. There is no
+hardcoded default any more: one silently rots every time the table moves, which is
+exactly what happened when the table went to 0.75 m.
+
+Give an origin that does not fit and the planner names the offending columns and
+suggests origins that do, instead of failing with a bare `IK failed at [...]`:
+
+```
+Cannot execute this structure: 7 of 16 build columns fall outside the arm's
+measured reach at origin (0.22, 0.3): (4, 2) at (0.3216, 0.3508), ... and 3 more.
+  Try: --origin -0.1484 0.2262  --origin -0.123 0.2262  --origin -0.0976 0.2262
+```
+
+The reach check is a **pre-filter**, matched against the nearest lattice sample so
+an origin need not sit on the lattice. The IK solve is still the authority.
 
 ### Reading the dry run
 
@@ -276,10 +305,13 @@ In priority order — see the table in [HANDOFF.md](HANDOFF.md) for ownership.
    the commanded angle with *no* current rise means an empty jaw. This is the
    single highest-value missing piece — without it the system cannot tell success
    from failure.
-3. **Check build cells against the reach map** in `build_structure.py`, and make a
-   working `--origin` the default. Today an out-of-reach origin fails with a bare
-   `IK failed at [...]`, which is a confusing way to say "your build does not fit".
+3. ~~Check build cells against the reach map~~ — **done 2026-09-13.** The planner
+   pre-filters the footprint against the reach map, auto-selects an origin when
+   none is given, and suggests fitting origins when one is rejected.
 4. **Teach a real `table_surface` pose** to replace the set-by-hand 0.5 m.
+5. **Decide whether the 25.5-degree transfer tilt matters.** Either hold the tool
+   vertical through transfers, or show that the grip survives it. The cheapest
+   check is the existing contact simulation, which does model friction.
 5. Contact simulation, demonstrations, and behaviour cloning — the ML track,
    unchanged and described in [BUILD_PLAN.md](BUILD_PLAN.md) §3-4.
 

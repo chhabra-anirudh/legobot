@@ -53,14 +53,26 @@ def _solves(arm, c, x, y, z, axis, seed):
         return False
 
 
-def load(table_height):
+def load_full(table_height):
+    """The cached map as {'cells': set of (x, y), 'pitch_m': float, ...}.
+
+    The sample spacing matters to callers: the map is a lattice of probed points,
+    so deciding whether an arbitrary coordinate is reachable needs a tolerance
+    relative to that spacing, not an exact lookup.
+    """
     path = cache_path(table_height)
     if not path.exists():
         raise FileNotFoundError(
             f'no reach map for a {table_height} m table; run '
             f'`python sim/reach_map.py --table {table_height}` first')
     data = json.loads(path.read_text())
-    return {(round(x, 4), round(y, 4)) for x, y in data['cells']}
+    data['cells'] = {(round(x, 4), round(y, 4)) for x, y in data['cells']}
+    return data
+
+
+def load(table_height):
+    """Just the reachable (x, y) set. See `load_full` for the sample spacing."""
+    return load_full(table_height)['cells']
 
 
 def main(argv=None):
