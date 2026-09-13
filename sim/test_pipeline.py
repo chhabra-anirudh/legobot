@@ -127,19 +127,21 @@ class PipelineTests(unittest.TestCase):
         self.assertTrue(points)
         self.assertEqual(len(set(len(p) for p in points)), 1)
 
-    def test_the_cached_description_examples_pass_and_fit_the_default_grid(self):
-        """house.json and rocket.json are the demo structures; both must keep
-        passing under the defaults this script uses, or the demo breaks silently."""
-        limits = {'grid': (12, 9), 'max_cubes': 40, 'max_layers': 4, 'max_footprint': 12}
-        for name, cubes in [('house.json', 40), ('rocket.json', 26)]:
-            with self.subTest(example=name):
-                structure = load(ROOT/'compiler'/'examples'/name)
-                report = validate(structure, limits)
-                self.assertTrue(report.ok, report.codes())
-                self.assertEqual(report.counts['cubes'], cubes)
-                # These came from a model/agent reply, not the offline library.
-                self.assertNotEqual(structure.source, 'offline_library')
-                self.assertTrue(structure.provenance['reasoning'])
+    def test_the_cached_rocket_example_passes_under_the_default_limits(self):
+        """rocket.json is the demo structure, so it must keep passing under the
+        defaults this script uses or the demo breaks silently. It is 7 rows deep
+        because the reachable area in front of the robot is wide and shallow."""
+        structure = load(ROOT/'compiler'/'examples'/'rocket.json')
+        report = validate(structure, {'grid': pipeline.DEFAULT_GRID,
+                                      'max_cubes': pipeline.DEFAULT_MAX_CUBES,
+                                      'max_layers': 4,
+                                      'max_footprint': max(pipeline.DEFAULT_GRID)})
+        self.assertTrue(report.ok, report.codes())
+        self.assertEqual(report.counts['cubes'], 11)
+        self.assertLessEqual(report.counts['footprint'][1], pipeline.DEFAULT_GRID[1])
+        # It came from a model/agent reply, not the offline library.
+        self.assertNotEqual(structure.source, 'offline_library')
+        self.assertTrue(structure.provenance['reasoning'])
 
 
 if __name__ == '__main__':

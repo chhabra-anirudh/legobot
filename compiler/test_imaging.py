@@ -15,6 +15,7 @@ from pathlib import Path
 import image_to_structure
 import imaging
 import simplify
+from image_to_structure import sheet_cells
 from placement import _greedy, _ranking, sequence
 from schema import Structure, Voxel, load, validate
 
@@ -269,21 +270,26 @@ class ImagePipelineTests(unittest.TestCase):
                          structure.provenance)
 
 
-class CatExampleTests(unittest.TestCase):
-    """The cached picture example must keep passing, and keep its provenance."""
+@unittest.skipUnless(PILLOW, 'Pillow is not installed')
+class TracedPictureTests(unittest.TestCase):
+    """`examples/images/cat.png` is kept as the picture-path input. There is no
+    cached cat structure any more: only the rocket is maintained as a demo design,
+    so the picture path is checked by tracing the image here instead."""
 
-    def test_the_cat_is_accepted_and_records_the_image_it_came_from(self):
-        cat = load(HERE/'examples'/'cat.json')
-        report = validate(cat, {'grid': (12, 8), 'max_layers': 1})
+    def test_tracing_the_example_image_yields_a_buildable_structure(self):
+        sheet = imaging.to_sheet(CAT_IMAGE, grid=(18, 7))
+        self.assertTrue(sheet.cells)
+        cells, actions = simplify.make_buildable(sheet_cells(sheet), grid=(18, 7))
+        structure = Structure('traced-cat', 'cat', voxels(cells, 'orange'))
+        report = validate(structure, {'grid': (18, 7), 'max_layers': 1})
         self.assertTrue(report.ok, report.codes())
-        self.assertEqual(report.counts['cubes'], 36)
-        self.assertIn('cat.png', cat.provenance['image_path'])
-        self.assertNotEqual(cat.source, 'offline_library')
+        self.assertTrue(actions, 'a photograph is solid; something must be reduced')
 
-    @unittest.skipUnless(PILLOW, 'Pillow is not installed')
-    def test_the_example_image_still_hashes_to_what_the_structure_claims(self):
-        cat = load(HERE/'examples'/'cat.json')
-        self.assertEqual(cat.provenance['image_sha256'], imaging.digest(CAT_IMAGE))
+    def test_the_example_image_hash_is_stable(self):
+        """The structures that came from this picture record this hash, so a silent
+        re-save of the image would break their provenance."""
+        self.assertEqual(imaging.digest(CAT_IMAGE),
+                         '5cb43bf80807cf5ce8a4d7ff50b26ce7256789daf76026131ae348a618416e96')
 
 
 if __name__ == '__main__':

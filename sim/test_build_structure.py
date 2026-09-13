@@ -20,7 +20,7 @@ sys.path.insert(0, str(HERE.parent/'compiler'))
 import build_structure as B  # noqa: E402
 import reach_map  # noqa: E402
 from simulate_assembly import Arm, load_config  # noqa: E402
-from schema import load as load_structure  # noqa: E402
+from schema import Structure, Voxel, load as load_structure  # noqa: E402
 from tool_frame import GRIP_YAW, rotation_for  # noqa: E402
 
 DOG = HERE.parent/'compiler'/'examples'/'dog.json'
@@ -41,13 +41,20 @@ class ReachTests(unittest.TestCase):
         cls.c = load_config(HERE/'assembly_config.json')
         cls.structure = load_structure(DOG)
         cls.table = float(cls.c['table_height_m'])
-        cls.reach = reach_map.load(cls.table)
+        # Exactly what main() uses: the measurement minus the robot's own chassis.
+        # Testing against the raw map put cubes inside the machine.
+        cls.reach = reach_map.clear_of_base(reach_map.load(cls.table), cls.c)
         cls.pitch = float(cls.c['block_size_m'][0])
 
     def test_reach_map_exposes_its_sample_spacing(self):
+        """The map's spacing is its own property, not the block size: it was probed
+        on a 25.4 mm lattice and the blocks are now 50.8 mm across. Callers match
+        against the nearest sample, so the two need not agree."""
         data = reach_map.load_full(self.table)
-        self.assertEqual(data['cells'], self.reach)
-        self.assertAlmostEqual(float(data['pitch_m']), self.pitch)
+        self.assertEqual(data['cells'], reach_map.load(self.table))
+        xs = sorted({x for x, _ in data['cells']})
+        spacing = min(b-a for a, b in zip(xs, xs[1:]) if b > a)
+        self.assertAlmostEqual(float(data['pitch_m']), spacing, places=6)
 
     def test_far_origin_is_reported_as_unreachable(self):
         """The old hardcoded default put part of the dog outside the workspace."""
@@ -67,17 +74,101 @@ class ReachTests(unittest.TestCase):
                 B.unreachable_columns(self.structure, self.c, cal, self.reach, self.pitch), [],
                 f'origin {origin} was offered but does not fit')
 
-    def test_candidate_origins_are_ranked_by_margin_and_deterministic(self):
+    def centre_of(self, origin):
+        cal = calibration_for(self.c, origin)
+        return [B.cell_centre(v.cell, self.c, cal) for v in self.structure.voxels]
+
+    def test_facing_the_robot_is_opt_in_and_costs_carried_tilt(self):
+        """`--face` puts the build beyond the chassis nose. It is not the default
+        because the arm works folded there and the carried cube tips much further."""
         cal = calibration_for(self.c, [0, 0])
-        first = B.candidate_origins(self.structure, self.c, cal, self.reach, self.pitch)
-        self.assertEqual(first, B.candidate_origins(self.structure, self.c, cal,
-                                                    self.reach, self.pitch))
-        margins = []
-        for origin in first:
-            cells = [(round(origin[0]+v.x*self.pitch, 4), round(origin[1]+v.y*self.pitch, 4))
-                     for v in self.structure.voxels]
-            margins.append(min(B._margin(cell, self.reach, self.pitch) for cell in cells))
-        self.assertEqual(margins, sorted(margins, reverse=True))
+        nose = float(np.asarray(self.c['base_footprint_m'], dtype=float)[0][1])
+        # A three-block line, small enough for the shallow area in front of the
+        # chassis; the dog does not fit there at 50.8 mm cells.
+        small = Structure('line', 'line', [Voxel(x, 0, 0, 'red') for x in range(3)])
+        facing = B.candidate_origins(small, self.c, cal, self.reach, self.pitch,
+                                     face=True)[0]
+        placed = [B.cell_centre(v.cell, self.c, calibration_for(self.c, facing))
+                  for v in small.voxels]
+        self.assertGreater(min(p[0] for p in placed), nose)
+        free = B.candidate_origins(small, self.c, cal, self.reach, self.pitch)[0]
+        self.assertNotEqual(list(free), list(facing),
+                            'facing should change the chosen origin')
+
+    def test_candidate_origins_are_ranked_front_then_near_and_are_deterministic(self):
+        """Front half first, then closest to the base. Distance is radial: once the
+        whole disc is probed the reachable set is a ring, so "smallest y" is the
+        robot's right-hand side, not near it."""
+        cal = calibration_for(self.c, [0, 0])
+        fits = B.candidate_origins(self.structure, self.c, cal, self.reach, self.pitch)
+        self.assertEqual(fits, B.candidate_origins(self.structure, self.c, cal,
+                                                   self.reach, self.pitch))
+        behind = [sum(p[0] for p in self.centre_of(o))/len(self.structure.voxels) < 0
+                  for o in fits]
+        self.assertEqual(behind, sorted(behind), 'front-half origins must come first')
+        front = [o for o, is_behind in zip(fits, behind) if not is_behind]
+        self.assertTrue(front)
+        distances = [round(max(np.hypot(p[0], p[1]) for p in self.centre_of(o)), 3)
+                     for o in front]
+        self.assertEqual(distances, sorted(distances), 'front origins run near to far')
+
+    def test_the_chosen_build_sits_in_front_of_the_robot(self):
+        cal = calibration_for(self.c, [0, 0])
+        best = B.candidate_origins(self.structure, self.c, cal, self.reach, self.pitch)[0]
+        centres = self.centre_of(best)
+        self.assertGreater(sum(p[0] for p in centres)/len(centres), 0,
+                           'the build ended up behind the robot')
+
+    def test_no_cube_is_placed_inside_the_robots_own_base(self):
+        """IK converges at points inside the machine, so the map alone is not enough.
+        Before this filter existed, 14 of the dog's 16 cubes were inside the base."""
+        cal = calibration_for(self.c, B.candidate_origins(
+            self.structure, self.c, calibration_for(self.c, [0, 0]), self.reach, self.pitch)[0])
+        positions, _, _ = B.staging_layout(self.structure, self.c, cal, self.reach)
+        (x_min, x_max), (y_min, y_max) = np.asarray(self.c['base_footprint_m'], dtype=float)
+        half = self.pitch/2
+        for point in list(positions) + self.centre_of(cal['origin_xy_m']):
+            self.assertFalse(x_min-half < point[0] < x_max+half
+                             and y_min-half < point[1] < y_max+half,
+                             f'cube at {np.round(point, 4)} is inside the robot base')
+
+    def test_the_raw_reach_map_does_include_cells_inside_the_base(self):
+        """Guards the reason `clear_of_base` exists: the measurement really does
+        report cells the chassis occupies, because IK does not know about it."""
+        raw = reach_map.load(self.table)
+        self.assertLess(len(reach_map.clear_of_base(raw, self.c)), len(raw))
+
+    def test_staging_fills_from_the_outside_of_the_workspace_inwards(self):
+        cal = calibration_for(self.c, B.candidate_origins(
+            self.structure, self.c, calibration_for(self.c, [0, 0]), self.reach, self.pitch)[0])
+        positions, _, _ = B.staging_layout(self.structure, self.c, cal, self.reach)
+        distances = [float(np.hypot(*p[:2])) for p in positions]
+        # The first slot handed out is the outermost eligible one, to within the
+        # millimetre that the sort rounds to so that near-equal radii group by row
+        # and each colour stays in a contiguous run. Not necessarily the outermost
+        # reachable cell either: slots sit on a two-cell lattice and keep a moat
+        # around the build, so some outer cells are not eligible at all.
+        self.assertGreaterEqual(distances[0], max(distances) - .001)
+        # No claim that every slot lies outside the build: at 50.8 mm cells this dog
+        # spans 0.36 m, so the supply has to share the workspace with it.
+        build = [np.hypot(p[0], p[1]) for p in self.centre_of(cal['origin_xy_m'])]
+        self.assertGreater(distances[0], max(build),
+                           'the outermost slot should still be beyond the build')
+
+    def test_the_drawn_table_covers_the_workspace_and_every_cube(self):
+        """The old box was hardcoded at x 0.08..0.52 and predated the reach map, so
+        builds at negative x were animated hovering over nothing."""
+        cal = calibration_for(self.c, B.candidate_origins(
+            self.structure, self.c, calibration_for(self.c, [0, 0]), self.reach, self.pitch)[0])
+        positions, _, _ = B.staging_layout(self.structure, self.c, cal, self.reach)
+        build = [B.cell_centre(v.cell, self.c, cal) for v in self.structure.voxels]
+        centre, half = B.table_box(self.c, list(self.reach)+build+list(positions))
+        cube = float(self.c['block_size_m'][0])/2
+        for point in list(positions) + build + [(x, y) for x, y in self.reach]:
+            for axis in (0, 1):
+                self.assertLessEqual(abs(float(point[axis])-centre[axis]) + cube, half[axis],
+                                     f'{point} is not on the table')
+        self.assertAlmostEqual(centre[2], self.table-.015, places=6)
 
     def test_plan_refuses_an_out_of_reach_origin_and_names_the_cells(self):
         arm = Arm(HERE/'robot_limits.json')
@@ -97,7 +188,8 @@ class PlanTests(unittest.TestCase):
         cls.c = load_config(HERE/'assembly_config.json')
         cls.arm = Arm(HERE/'robot_limits.json')
         cls.structure = load_structure(DOG)
-        cls.reach = reach_map.load(float(cls.c['table_height_m']))
+        cls.reach = reach_map.clear_of_base(
+            reach_map.load(float(cls.c['table_height_m'])), cls.c)
         cal = calibration_for(cls.c, [0, 0])
         pitch = float(cls.c['block_size_m'][0])
         cls.origin = B.candidate_origins(cls.structure, cls.c, cal, cls.reach, pitch)[0]
@@ -135,13 +227,31 @@ class PlanTests(unittest.TestCase):
         Transfers interpolate in joint space, which keeps every intermediate pose
         reachable but does not hold the tool vertical. The cube is carried through
         that tilt. Attachment is idealized here so the simulation does not care;
-        two foam pads holding a cube by friction might. If this bound ever needs
-        raising, check the slip case first.
+        two foam pads holding a cube by friction might.
+
+        The bound has moved twice and the history is the point. It was 30 deg, based
+        on 25.5 deg measured on a layout that put 14 of this dog's 16 cubes **inside
+        the robot's chassis** — the reach map did not exclude the base. Placing
+        honestly pushed it to 33-47, and forcing the build in front of the robot to
+        76, because the arm works folded there. Facing is now opt-in (`--face`) and
+        the free placement measures 22.8 deg, better than the original figure.
+
+        Do not raise this bound to make a placement policy fit. Check slip in
+        `sim/contact_grasp.py` first: at 76 deg two foam pads holding by friction is
+        a different proposition from 23.
         """
         carrying = [self.tilt(f[0]) for f in self.frames if f[5] is not None]
         self.assertTrue(carrying)
-        self.assertLess(max(carrying), 30., 'carried tilt grew beyond the documented 25.5 deg')
+        self.assertLess(max(carrying), 30., 'carried tilt grew beyond the measured 22.8 deg')
         self.assertGreater(max(carrying), 5., 'tilt vanished: update the docs if this is fixed')
+
+    def test_the_planner_reports_the_carried_tilt_it_measured(self):
+        """The number has to reach the operator, not just the test suite."""
+        tilt, tipped, carrying = B.carried_tilt_deg(self.arm, self.frames)
+        self.assertEqual(carrying, sum(1 for f in self.frames if f[5] is not None))
+        self.assertAlmostEqual(tilt, max(self.tilt(f[0]) for f in self.frames
+                                         if f[5] is not None), places=6)
+        self.assertGreater(tipped, 0)
 
     def test_one_step_per_cube_and_every_cube_placed_once(self):
         self.assertEqual(len(self.steps), len(self.structure.voxels))

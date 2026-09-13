@@ -18,15 +18,25 @@ from cube_colors import COLORS  # noqa: E402  single source of truth for colors
 from placement import sequence  # noqa: E402
 
 SCHEMA_VERSION = 1
-# Nominal cube size confirmed by the user. Measured stack pitch is a separate
-# calibration quantity and is deliberately not represented here.
-NOMINAL_CUBE_SIZE_M = .0254
+# Horizontal cell pitch of one block, confirmed by the user: the blocks are now
+# 2 inches across and 1 inch tall, so this is 50.8 mm while a layer is 25.4 mm high.
+# `cube_size_m` therefore means the **plan** size of a cell, and the layer height
+# lives in `sim/assembly_config.json` as `block_size_m[2]`. Measured stack pitch is a
+# separate calibration quantity and is deliberately not represented here.
+NOMINAL_CUBE_SIZE_M = .0508
+NOMINAL_LAYER_HEIGHT_M = .0254
 # Provisional limits. Real inventory, reachable footprint, and a validated layer
 # count are not confirmed; override them explicitly per build.
 # 'grid' is the reachable build area in cells, measured from the arm in
 # sim/build_structure.py. None means unbounded.
 DEFAULT_LIMITS = {'max_cubes': 64, 'max_layers': 4, 'max_footprint': 12,
                   'grid': None}
+# How many separate pieces a design may fall into. One by default, so a stray
+# floating cube is still an error rather than "a second piece". A design that means
+# to have separate parts — a face with dots for eyes — says so in `Structure.pieces`.
+# Connectivity is a design rule, not a physical one: the arm places one cube at a
+# time and never needs two cubes to touch.
+DEFAULT_PIECES = 1
 
 
 @dataclass(frozen=True)
@@ -58,6 +68,10 @@ class Structure:
     # actions. Omitted from the JSON when empty, so files without it are
     # unchanged. Provenance only; the checks below never read it.
     provenance: dict = None
+    # Separate parts the design is meant to have. Left at 1, a disconnected cube is
+    # a mistake; set higher, the checker permits that many pieces and says so in the
+    # preview. Declared per structure so a scattering of cubes cannot pass unnoticed.
+    pieces: int = DEFAULT_PIECES
 
     def to_dict(self):
         out = {'schema_version': self.schema_version, 'structure_id': self.structure_id,
@@ -65,6 +79,8 @@ class Structure:
                'prompt': self.prompt,
                'voxels': [{'x': v.x, 'y': v.y, 'z': v.z, 'color': v.color}
                           for v in self.voxels]}
+        if self.pieces != DEFAULT_PIECES:
+            out['pieces'] = self.pieces
         if self.provenance:
             out['provenance'] = self.provenance
         return out
@@ -88,7 +104,8 @@ class Structure:
                    voxels=parsed, cube_size_m=d.get('cube_size_m', NOMINAL_CUBE_SIZE_M),
                    source=d.get('source', 'unspecified'), prompt=d.get('prompt', ''),
                    schema_version=d.get('schema_version', SCHEMA_VERSION),
-                   provenance=d.get('provenance'))
+                   provenance=d.get('provenance'),
+                   pieces=d.get('pieces', DEFAULT_PIECES))
 
 
 @dataclass
@@ -140,7 +157,8 @@ def validate(structure, limits=None, inventory=None):
         add('cube_size', 'cube_size_m must be a positive number')
     elif abs(size - NOMINAL_CUBE_SIZE_M) > 1e-9:
         add('cube_size', f'cube_size_m {size} does not match the confirmed '
-                         f'{NOMINAL_CUBE_SIZE_M} m cube')
+                         f'{NOMINAL_CUBE_SIZE_M} m block width (2 inches across, '
+                         f'{NOMINAL_LAYER_HEIGHT_M} m tall)')
 
     if not structure.voxels:
         add('empty', 'a structure needs at least one voxel')
@@ -194,16 +212,22 @@ def validate(structure, limits=None, inventory=None):
         if z and (x, y, z-1) not in occupied:
             add('unsupported', 'no cube directly below; overhangs are not supported', cell)
 
-    # Single 6-connected component, so the build is one object.
-    start = min(occupied)
-    seen, stack = {start}, [start]
-    while stack:
-        x, y, z = stack.pop()
-        for step in [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]:
-            cell = (x+step[0], y+step[1], z+step[2])
-            if cell in occupied and cell not in seen:
-                seen.add(cell)
-                stack.append(cell)
+    # Count 6-connected components. One by default, so the build is one object; a
+    # design that declares `pieces` may fall into that many parts, which is what lets
+    # a face have separate dots for eyes.
+    unvisited, components = set(occupied), 0
+    while unvisited:
+        stack = [min(unvisited)]
+        unvisited.discard(stack[0])
+        components += 1
+        while stack:
+            x, y, z = stack.pop()
+            for step in [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]:
+                cell = (x+step[0], y+step[1], z+step[2])
+                if cell in unvisited:
+                    unvisited.discard(cell)
+                    stack.append(cell)
+    counts['pieces'] = components
     # Finger clearance: can the cubes actually be placed one at a time?
     blocked = sequence(structure.voxels)[1]
     for cell in blocked:
@@ -211,10 +235,14 @@ def validate(structure, limits=None, inventory=None):
                             'cube; a region two or more cells wide in both x and y cannot '
                             'be completed', cell)
 
-    if len(seen) != len(occupied):
-        stranded = len(occupied)-len(seen)
-        add('disconnected', f'{stranded} cube{"s" if stranded > 1 else ""} '
-                            f'{"are" if stranded > 1 else "is"} not connected to the main body')
+    allowed = max(1, int(structure.pieces) if isinstance(structure.pieces, int) else 1)
+    if not isinstance(structure.pieces, int) or isinstance(structure.pieces, bool) \
+            or structure.pieces < 1:
+        add('pieces', 'pieces must be a positive integer')
+    elif components > allowed:
+        add('disconnected', f'the cubes fall into {components} separate pieces but the '
+                            f'design declares {allowed}; set "pieces" if the parts are '
+                            f'meant to be separate, such as dots for eyes')
     return Report(problems, counts)
 
 

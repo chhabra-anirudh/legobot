@@ -32,10 +32,37 @@ import reach_map  # noqa: E402
 from tool_frame import DOWN, GRIP_YAW, ORIENTATIONS, rotation_for  # noqa: E402,F401
 
 
+def rotate_cell(x, y, quarter_turns):
+    """Rotate a voxel column by whole quarter turns about the build origin.
+
+    Whole turns only, so cells stay on the lattice and the checker's clearance
+    reasoning still holds. This is a placement choice, not a change to the design:
+    a quarter turn swaps which way the picture's own x axis runs on the table, which
+    is what lets a wide design stand across the robot's line of sight rather than
+    stretching away from it.
+    """
+    for _ in range(quarter_turns % 4):
+        x, y = -y, x
+    return x, y
+
+
+def grip_axis_in_root(axis, quarter_turns):
+    """The placement axis named in root coordinates.
+
+    `placement.sequence` decides the finger axis in **voxel** space. An odd quarter
+    turn maps voxel x onto root y, so the wrist yaw has to swap with it or the
+    fingers close across the faces they were meant to grip.
+    """
+    if quarter_turns % 2 == 0:
+        return axis
+    return 'y' if axis == 'x' else 'x'
+
+
 def cell_centre(cell, c, calibration):
     """Voxel cell to root-frame cube centre, in metres."""
     x, y, z = cell
     pitch = calibration['pitch_m']
+    x, y = rotate_cell(x, y, calibration.get('quarter_turns', 0))
     return np.array([calibration['origin_xy_m'][0] + x*pitch[0],
                      calibration['origin_xy_m'][1] + y*pitch[1],
                      c['table_height_m'] + (z+.5)*calibration['layer_height_m']])
@@ -66,17 +93,42 @@ def unreachable_columns(structure, c, calibration, reach, pitch):
     return out
 
 
-def candidate_origins(structure, c, calibration, reach, pitch, limit=None):
+def candidate_origins(structure, c, calibration, reach, pitch, limit=None, face=False):
     """Lattice origins where the whole footprint lands in reach, best first.
 
-    Ranked by margin: how far the tightest footprint column sits from the edge of
-    the reachable set, in cells. A build with room around it survives calibration
-    error; one hugging the boundary does not. Ties break on lower y then lower x
-    so the result is deterministic.
+    Ranked, in order:
+
+    0. With `face=True` only: **clear of the chassis nose first**, so the robot is
+       looking at what it builds. Off by default, because it is expensive — the arm
+       works folded at those placements and the carried cube tips much further
+       (76 degrees against 33 for the same structure placed freely).
+    1. **In front of the base before behind it.** The robot drives and faces +x,
+       so a build at negative x sits behind the machine with the mast between the
+       two. Nothing here checks the arm against its own body, which is a second
+       reason to prefer the front — a heuristic, not a collision check.
+    2. **Closest to the robot**, measured from the base centre to the furthest cube
+       of the build, so the whole structure sits as near the machine as the
+       workspace allows and the supply gets the outside.
+    3. **More margin**: how many cells of reachable padding surround the tightest
+       footprint column, so a build survives calibration error.
+    4. **Furthest forward**, then lowest x, so the result is deterministic.
+
+    A deep structure may have no front-half origin at all — the front of the
+    workspace is shallow — and then it is placed behind, which `--list-origins`
+    makes visible.
+
+    Distance is radial on purpose. The reachable set is a **ring around the base**
+    once the whole disc is probed rather than one slice of it, so "smallest y" is
+    not "nearest the robot" — it is the robot's right-hand side. Callers must pass
+    reach already filtered by `reach_map.clear_of_base`, or the closest origins
+    will be inside the chassis.
     """
-    columns = [(v.x, v.y) for v in structure.voxels]
+    columns = [rotate_cell(v.x, v.y, calibration.get('quarter_turns', 0))
+               for v in structure.voxels]
     xs = sorted({x for x, _ in reach})
     ys = sorted({y for _, y in reach})
+    nose_x = float(np.asarray(c['base_footprint_m'], dtype=float)[0][1]
+                   + float(c['base_clearance_m']))
     scored = []
     for ox in xs:
         for oy in ys:
@@ -85,9 +137,13 @@ def candidate_origins(structure, c, calibration, reach, pitch, limit=None):
             if not all(cell in reach for cell in cells):
                 continue
             margin = min(_margin(cell, reach, pitch) for cell in cells)
-            scored.append((-margin, oy, ox, [ox, oy]))
+            reach_out = max(np.hypot(x, y) for x, y in cells)
+            forward = sum(x for x, _ in cells)/len(cells)
+            facing = face and min(x for x, _ in cells) - pitch/2 > nose_x
+            scored.append((face and not facing, forward < 0, round(reach_out, 3), -margin,
+                           -round(forward, 4), ox, [ox, oy]))
     scored.sort()
-    return [origin for _, _, _, origin in scored][:limit]
+    return [origin for *_, origin in scored][:limit]
 
 
 def _margin(cell, reach, pitch, cap=4):
@@ -113,6 +169,12 @@ def staging_layout(structure, c, calibration, reach):
     magnetic pair. Each color gets a contiguous run of slots, so the colors end
     up in separate places on the table.
 
+    Slots fill **from the outside of the workspace inwards**, farthest from the
+    base first, which is the opposite end from where `candidate_origins` puts the
+    build. The supply and the structure then occupy different parts of the table
+    instead of interleaving. A large build leaves few outer slots and the supply
+    wraps closer in; that is a consequence of measured reach, not a preference.
+
     Returns (positions, colors, picks); picks maps a color to its slot indices.
     """
     pitch = float(calibration['pitch_m'][0])
@@ -125,9 +187,33 @@ def staging_layout(structure, c, calibration, reach):
 
     xs = sorted({x for x, _ in reach})
     ys = sorted({y for _, y in reach})
-    free = [(x, y) for (x, y) in sorted(reach, key=lambda p: (p[1], p[0]))
+    # On the build's side of the robot first, then outermost. The side test matters
+    # because the reachable set is a ring: without it the supply wraps around the
+    # machine, and then no rectangular table holds every cube without covering the
+    # robot itself. Within a side, outermost first keeps the space next to the robot
+    # for the build. Remaining ties break on y then x, so each colour still ends up
+    # in a contiguous run rather than scattered.
+    bearing = np.arctan2(*reversed(np.mean([cell_centre((v.x, v.y, 0), c, calibration)[:2]
+                                            for v in structure.voxels], axis=0)))
+
+    forward = np.array([np.cos(bearing), np.sin(bearing)])
+
+    def order(slot):
+        angle = abs((np.arctan2(slot[1], slot[0]) - bearing + np.pi) % (2*np.pi) - np.pi)
+        # Furthest along the build's bearing, not merely furthest from the base: that
+        # keeps the supply past the chassis instead of level with it, which is what
+        # lets one rectangle hold the build, the supply and no robot.
+        return (angle > np.pi/2, -round(float(np.dot(slot, forward)), 3),
+                -round(np.hypot(*slot), 3), -slot[1], slot[0])
+
+    # Slots must be a whole empty cell apart, and a cell is now wider than one
+    # reach-map sample: the map is probed on its own lattice, the blocks are 2 inches
+    # across. Stepping by samples instead of by cells staged them touching.
+    spacing = min((b-a for a, b in zip(xs, xs[1:]) if b > a), default=pitch)
+    step = max(2, int(round(2*pitch/spacing)))
+    free = [(x, y) for (x, y) in sorted(reach, key=order)
             if (x, y) not in blocked
-            and xs.index(x) % 2 == 0 and ys.index(y) % 2 == 0]
+            and xs.index(x) % step == 0 and (len(ys)-1-ys.index(y)) % step == 0]
 
     needed = {}
     for v in structure.voxels:
@@ -269,6 +355,7 @@ def plan_build(structure, c, arm, calibration, reach):
     record('Ready: every cube staged on the table, sorted by color')
 
     for index, (voxel, axis) in enumerate(steps):
+        axis = grip_axis_in_root(axis, calibration.get('quarter_turns', 0))
         place_yaw = GRIP_YAW[axis]
         place_offset = -rotation_for(place_yaw) @ c['tool_grasp_point_m']
         held = picks[voxel.color][taken[voxel.color]]
@@ -312,6 +399,7 @@ def placement_plan(structure, c, calibration, steps, staged_positions, staged_co
     taken = {color: 0 for color in picks}
     plan = []
     for index, (voxel, axis) in enumerate(steps):
+        axis = grip_axis_in_root(axis, calibration.get('quarter_turns', 0))
         rotation = rotation_for(GRIP_YAW[axis])
         offset = -rotation @ c['tool_grasp_point_m']
         slot = picks[voxel.color][taken[voxel.color]]
@@ -335,6 +423,7 @@ def placement_plan(structure, c, calibration, steps, staged_positions, staged_co
             'build_origin_m': [round(float(v), 5) for v in calibration['origin_xy_m']],
             'pitch_m': [round(v, 5) for v in pitch],
             'layer_height_m': round(float(calibration['layer_height_m']), 5),
+            'build_quarter_turns': int(calibration.get('quarter_turns', 0)),
             'table_height_m': round(float(c['table_height_m']), 5),
             'travel_height_m': round(travel_z, 5),
             'tool_grasp_point_m': [round(float(v), 5) for v in c['tool_grasp_point_m']],
@@ -351,14 +440,119 @@ def structure_height(structure):
     return max(v.z for v in structure.voxels) + 1
 
 
-def render(structure, c, arm, frames, calibration, save, labels=False):
+def carried_tilt_deg(arm, frames):
+    """Tool tilt from vertical, in degrees, over the frames that carry a cube.
+
+    Returns (max, count over 10 deg, total carrying frames). Transfers interpolate
+    in joint space, which keeps every intermediate pose reachable but does not hold
+    the tool vertical, so a carried cube is tipped. Attachment here is idealized and
+    cannot drop anything; two foam pads holding by friction are a different question,
+    open in `sim/contact_grasp.py`. Reported rather than buried for that reason.
+    """
+    tilts = []
+    for q, _, _, _, _, held, _ in frames:
+        if held is None:
+            continue
+        _, R = arm.fk(q)
+        tilts.append(float(np.degrees(np.arccos(np.clip(-R[2, 2], -1, 1)))))
+    if not tilts:
+        return 0., 0, 0
+    return max(tilts), sum(1 for t in tilts if t > 10), len(tilts)
+
+
+def table_rectangle(c, points, margin_m=.02):
+    """One rectangular table, turned to face the work and clear of the robot.
+
+    Returns `(centre, half_extent, yaw)`, all in the root frame, with `yaw` the
+    rotation about z that the rectangle is drawn at.
+
+    A table is a rectangle, so this stays a rectangle. What it does not do is stay
+    axis-aligned: the arm serves a region off to one side of the chassis, so an
+    axis-aligned box over that region also covers the robot, and the machine ends up
+    standing in its own table. Turning the rectangle to the bearing of the work and
+    pushing its near edge past the chassis corners gives the arrangement a person
+    would actually set up — robot at the near edge, table extending away from it.
+
+    The yaw is a property of where the arm reaches, not a viewing choice. This mount
+    reaches to the robot's left-front, so the table sits at an angle to the nose.
+    """
+    pad = float(c['block_size_m'][0])/2 + margin_m
+    xy = np.array([[float(p[0]), float(p[1])] for p in points])
+    (bx0, bx1), (by0, by1) = np.asarray(c['base_footprint_m'], dtype=float)
+    keep = float(c['base_clearance_m'])
+    chassis = np.array([[x, y] for x in (bx0-keep, bx1+keep) for y in (by0-keep, by1+keep)])
+
+    def rectangle(yaw):
+        """Smallest rectangle at this yaw holding every cube, and its chassis overlap."""
+        rot = np.array([[np.cos(yaw), np.sin(yaw)], [-np.sin(yaw), np.cos(yaw)]])
+        local, base = xy @ rot.T, chassis @ rot.T
+        lo, hi = local.min(axis=0)-pad, local.max(axis=0)+pad
+        overlap = np.all((base > lo) & (base < hi), axis=1).sum()
+        return lo, hi, overlap, np.prod(hi-lo)
+
+    # Turn the rectangle until it holds every cube without covering the robot. The
+    # arm serves a region off to one side, so the axis-aligned rectangle over that
+    # region also covers the chassis and the machine stands in its own table; some
+    # angle usually clears it. Ties go to the smaller table.
+    best = None
+    for degrees in range(0, 180):
+        lo, hi, overlap, area = rectangle(np.radians(degrees))
+        key = (overlap, round(area, 4), degrees)
+        if best is None or key < best[0]:
+            best = (key, np.radians(degrees), lo, hi)
+    (overlap, _, _), yaw, lo, hi = best
+    mid = (lo+hi)/2
+    rot = np.array([[np.cos(yaw), -np.sin(yaw)], [np.sin(yaw), np.cos(yaw)]])
+    centre_xy = rot @ mid
+    return ([centre_xy[0], centre_xy[1], float(c['table_height_m'])-.015],
+            [(hi[0]-lo[0])/2, (hi[1]-lo[1])/2, .015], yaw, int(overlap))
+
+
+def table_box(c, points, margin_m=.02):
+    """Centre and half-extent of the table surface to draw, in the root frame.
+
+    `points` is anything with x and y first: reach-map cells, cube centres, staging
+    slots. The box covers them all, padded by a cube half-width plus `margin_m`.
+    See `table_boxes` for the version that keeps the robot out of its own table.
+
+    Derived rather than fixed on purpose. The previous hardcoded box spanned
+    x 0.08..0.52, which predated the reach measurement (x -0.25..0.36), so builds
+    at negative x were animated hovering over nothing.
+
+    This is a visual proxy for a surface whose position in `root` has never been
+    surveyed — only its height is set, and by hand. It says "the arm's workspace
+    has to be on the table", not "the table is here".
+    """
+    pad = float(c['block_size_m'][0])/2 + margin_m
+    xs = [float(p[0]) for p in points]
+    ys = [float(p[1]) for p in points]
+    centre = [(min(xs)+max(xs))/2, (min(ys)+max(ys))/2, float(c['table_height_m'])-.015]
+    half = [(max(xs)-min(xs))/2 + pad, (max(ys)-min(ys))/2 + pad, .015]
+    return centre, half
+
+
+def render(structure, c, arm, frames, calibration, save, labels=False, reach=()):
     os.environ['PATH'] = str(Path(sys.executable).parent)+os.pathsep+os.environ.get('PATH', '')
     rr.init('voxel-structure-build', spawn=not bool(save))
     if save:
         rr.save(save)
     commandable = log_robot(str(URDF), dict(zip(arm.names, frames[0][0])))
-    rr.log('workspace/table', rr.Boxes3D(centers=[[.3, .35, c['table_height_m']-.015]],
-           half_sizes=[[.22, .20, .015]], colors=[[85, 100, 115]]), static=True)
+    # Only what is actually on the table defines it: the structure and the staged
+    # cubes. Sizing it to the whole reachable ring drew a table the robot stood in.
+    on_table = ([cell_centre(v.cell, c, calibration) for v in structure.voxels]
+                + list(frames[0][1]))
+    centre, half, yaw, overlap = table_rectangle(c, on_table)
+    if overlap:
+        print(f'Note: no rectangle holds every cube while clearing the chassis; the '
+              f'table drawn covers {overlap} of its 4 corners.', file=sys.stderr)
+    rr.log('workspace/table', rr.Transform3D(
+        translation=centre, mat3x3=np.array([[np.cos(yaw), -np.sin(yaw), 0],
+                                             [np.sin(yaw), np.cos(yaw), 0],
+                                             [0, 0, 1]])), static=True)
+    rr.log('workspace/table/surface', rr.Boxes3D(
+        half_sizes=[half], colors=[[85, 100, 115]],
+        labels=[f'table, {2*half[0]:.2f} x {2*half[1]:.2f} m at '
+                f'{np.degrees(yaw):.0f} deg to the robot']), static=True)
     # Footprint of the finished structure, so the target is visible from frame one.
     targets = [cell_centre(v.cell, c, calibration) for v in structure.voxels if v.z == 0]
     rr.log('workspace/footprint', rr.Boxes3D(
@@ -396,6 +590,16 @@ def main(argv=None):
                              'the best-fitting origin from the measured reach map.')
     parser.add_argument('--list-origins', action='store_true',
                         help='print origins that fit this structure, best first, and exit')
+    parser.add_argument('--face', action='store_true',
+                        help='place the build clear of the chassis nose so the robot looks '
+                             'at it. Costs carried tilt: the arm works folded there, and '
+                             'the same structure tips 76 deg against 33 placed freely.')
+    parser.add_argument('--rotate', type=int, choices=[0, 90, 180, 270], default=None,
+                        help='turn the build on the table by whole quarter turns. The '
+                             'design is unchanged; this decides which way its own x axis '
+                             'runs, so a wide structure can stand across the robot\'s line '
+                             'of sight instead of stretching away from it. Omit to try '
+                             'every quarter turn and keep the one the robot faces best.')
     parser.add_argument('--pitch', type=float, default=None,
                         help='centre-to-centre cube pitch in metres (default: nominal cube size)')
     parser.add_argument('--check', action='store_true', help='plan only, no viewer or recording')
@@ -423,41 +627,74 @@ def main(argv=None):
                    'layer_height_m': float(c['block_size_m'][2])}
 
     try:
-        reach = reach_map.load(float(c['table_height_m']))
+        measured = reach_map.load(float(c['table_height_m']))
+        # IK converges at points inside the robot's own chassis; nothing can be
+        # built or staged there. Drop them before any placement decision.
+        reach = reach_map.clear_of_base(measured, c)
+        blocked_by_base = len(measured)-len(reach)
+        if blocked_by_base:
+            print(f'{len(reach)} of {len(measured)} mapped cells are usable; '
+                  f'{blocked_by_base} sit inside the robot base and were dropped.')
+        turns = [args.rotate//90] if args.rotate is not None else [0, 1, 2, 3]
         if args.list_origins:
-            fits = candidate_origins(structure, c, calibration, reach, pitch)
-            print(f'{len(fits)} origins fit this structure at a '
-                  f'{c["table_height_m"]} m table, best margin first:')
-            for origin in fits[:20]:
-                print(f'  --origin {origin[0]} {origin[1]}')
-            return 0 if fits else 2
+            for quarter in turns:
+                calibration['quarter_turns'] = quarter
+                fits = candidate_origins(structure, c, calibration, reach, pitch,
+                                         face=args.face)
+                print(f'{len(fits)} origins fit at {quarter*90} degrees on a '
+                      f'{c["table_height_m"]} m table, best facing first:')
+                for origin in fits[:10]:
+                    print(f'  --rotate {quarter*90} --origin {origin[0]} {origin[1]}')
+            return 0
         if args.origin is None:
-            # A hardcoded default silently rots whenever the table moves, so
-            # derive one from the measured reach instead and say which was used.
-            fits = candidate_origins(structure, c, calibration, reach, pitch)
-            if not fits:
-                raise ValueError(
-                    'no origin places this structure inside the measured reach at a '
-                    f'{c["table_height_m"]} m table. Use a smaller structure, or lower '
-                    'the table: reach shrinks sharply near the top of the vertical travel.')
-            chosen = None
-            for origin in fits:
-                calibration['origin_xy_m'] = np.array(origin, dtype=float)
-                try:
-                    staging_layout(structure, c, calibration, reach)
-                except ValueError:
-                    continue      # fits the reach but leaves no room to stage cubes
-                chosen = origin
-                break
+            # A hardcoded default silently rots whenever the table moves, so derive
+            # one from the measured reach instead and say which was used. Each
+            # quarter turn is a different set of origins: a wide design may only
+            # stand in front of the robot one way round.
+            nose_x = float(np.asarray(c['base_footprint_m'], dtype=float)[0][1])
+            candidates = []
+            for quarter in turns:
+                calibration['quarter_turns'] = quarter
+                fits = candidate_origins(structure, c, calibration, reach, pitch,
+                                         face=args.face)
+                for origin in fits:
+                    calibration['origin_xy_m'] = np.array(origin, dtype=float)
+                    try:
+                        staging_layout(structure, c, calibration, reach)
+                    except ValueError:
+                        continue  # fits the reach but leaves no room to stage cubes
+                    cubes = [cell_centre(v.cell, c, calibration) for v in structure.voxels]
+                    facing = min(p[0] for p in cubes) > nose_x
+                    candidates.append((not facing, quarter, origin, len(fits)))
+                    break         # best origin at this rotation; try the next rotation
+            # Every rotation that can be built, best facing first. A wide design often
+            # only stands in front of the robot one way round.
+            candidates.sort(key=lambda item: (item[0], item[1]))
+            chosen = ((candidates[0][2], candidates[0][1], candidates[0][3])
+                      if candidates else None)
             if chosen is None:
                 raise ValueError(
-                    f'{len(fits)} origins place this structure inside the measured reach, '
-                    f'but none leaves enough isolated slots beside it to stage '
-                    f'{len(structure.voxels)} cubes. Use a smaller structure or a lower table.')
-            print(f'origin not given; chose --origin {chosen[0]} {chosen[1]} '
-                  f'from the reach map ({len(fits)} fit; --list-origins shows them).')
+                    f'no placement fits this structure inside the measured reach at a '
+                    f'{c["table_height_m"]} m table with room to stage '
+                    f'{len(structure.voxels)} cubes, at any quarter turn. Use a smaller '
+                    f'structure, or lower the table: reach shrinks sharply near the top '
+                    f'of the vertical travel.')
+            origin, quarter, count = chosen
+            calibration['origin_xy_m'] = np.array(origin, dtype=float)
+            calibration['quarter_turns'] = quarter
+            nose = float(np.asarray(c['base_footprint_m'], dtype=float)[0][1])
+            cubes = [cell_centre(v.cell, c, calibration) for v in structure.voxels]
+            facing = min(p[0] for p in cubes) > nose
+            print(f'placement not given; chose --rotate {quarter*90} --origin '
+                  f'{origin[0]} {origin[1]} from the reach map ({count} fit at this '
+                  f'rotation; --list-origins shows them).')
+            print(f'The build sits {"in front of" if facing else "beside or behind"} the '
+                  f'robot: x {min(p[0] for p in cubes):+.3f}..{max(p[0] for p in cubes):+.3f}, '
+                  f'y {min(p[1] for p in cubes):+.3f}..{max(p[1] for p in cubes):+.3f} m '
+                  f'(chassis front at x {nose:+.3f}).')
         else:
             calibration['origin_xy_m'] = np.array(args.origin, dtype=float)
+            calibration['quarter_turns'] = turns[0]
         frames, steps, staged, cold, plan = plan_build(structure, c, arm, calibration, reach)
     except (ValueError, FileNotFoundError) as exc:
         print(f'Cannot execute this structure: {exc}', file=sys.stderr)
@@ -470,6 +707,10 @@ def main(argv=None):
     if cold:
         print(f'{len(cold)} waypoints needed a cold IK restart, first at {cold[0]}. '
               f'The joint path may jump there; smooth before sending this to hardware.')
+    tilt, tipped, carrying = carried_tilt_deg(arm, frames)
+    print(f'Carried cubes are tipped up to {tilt:.1f} deg from vertical '
+          f'({tipped} of {carrying} carrying frames past 10 deg); grasp and release '
+          f'stay vertical. Idealized attachment cannot drop a cube — friction might.')
     print('Kinematics only: attachment is idealized and contact, magnetic force, '
           'arm/table collisions, and actuator rates are not simulated.')
     if args.export:
@@ -505,7 +746,7 @@ def main(argv=None):
         for color, slots in sorted(plan['staging'].items()):
             print(f"  {color:<7} {len(slots):>2} cubes, from {slots[0]} to {slots[-1]}")
     if not args.check:
-        render(structure, c, arm, frames, calibration, args.save, args.labels)
+        render(structure, c, arm, frames, calibration, args.save, args.labels, reach)
     return 0
 
 

@@ -1,8 +1,8 @@
 # LegoBot
 
-Prompt- or picture-to-structure assembly with BracketBot and 1-inch (25.4 mm)
-magnetic cubes. One arm and a finger gripper; imitation learning for pickup is
-planned.
+Prompt- or picture-to-structure assembly with BracketBot and magnetic blocks
+**2 inches across and 1 inch tall** (50.8 x 50.8 x 25.4 mm). One arm and a finger
+gripper; imitation learning for pickup is planned.
 
 **Start here:** [Robot setup and status report](docs/ROBOT_SETUP.md) — full context for picking this up cold ·
 [Current status and next tasks](docs/HANDOFF.md) · [Build plan](docs/BUILD_PLAN.md) ·
@@ -29,7 +29,14 @@ answers the design request. The structure file always records which one produced
 .venv/bin/python build_from_description.py "a rocket" --request outputs/ask.json
 .venv/bin/python build_from_description.py "a rocket" --ingest outputs/reply.json \
     --source "<what answered it>"
+
+# cached examples, planned straight into the simulator
+.venv/bin/python sim/build_structure.py compiler/examples/smiley.json   # 10 blocks
+.venv/bin/python sim/build_structure.py compiler/examples/rocket.json   # 11 blocks
 ```
+
+The reachable build area is **10x3 blocks** at a 0.5 m table. At 0.78 m only a single
+row of six fits — see [the handoff](docs/HANDOFF.md) before moving the table.
 
 The simulated build is kinematics with idealized attachment: finishing here means
 the design satisfies the stated rules, not that the real arm can place 40 cubes.
@@ -79,15 +86,14 @@ conventions and learning walkthrough. These scripts do not command the real robo
 ```sh
 .venv/bin/python -m pip install -r requirements-llm.txt
 .venv/bin/python compiler/image_to_structure.py compiler/examples/images/cat.png \
-    --trace --grid 12 8 --output outputs/cat.json      # deterministic, no model
+    --trace --grid 10 3 --output outputs/cat.json      # deterministic, no model
 .venv/bin/python sim/build_structure.py outputs/cat.json --save outputs/cat.rrd
 ```
 
 Drop `--trace` to send the picture to a vision model instead. A picture is
-downsampled onto the build grid and reduced to buildable line art, with every cube
-dropped or added reported. Cached results: `compiler/examples/cat.json` (36 cubes,
-from a picture) and `compiler/examples/house.json` (40 cubes, from the description
-"a small house"), which plan as 3653 and 3991 joint-limited poses.
+downsampled onto the build grid and reduced to buildable line art, with every block
+dropped or added reported. `compiler/examples/images/cat.png` is the tracked test
+image.
 
 ## Layout
 

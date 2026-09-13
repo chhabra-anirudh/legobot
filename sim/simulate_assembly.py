@@ -26,11 +26,17 @@ class Arm:
     several joints the real arm reaches considerably less, so a solution that is
     valid here can be silently clamped by the robot. Pass the file whenever a
     trajectory is meant for hardware.
+
+    `tip` selects which arm. The robot has two, mirrored on one mast: `left_eef`
+    drives `lj0..lj6`, `right_eef` drives `rj0..rj6`. Everything planned so far is
+    left-arm, and only the left arm has a calibration, so the right chain carries
+    the URDF's permissive limits unless a limits file is supplied for it — use it
+    for measurement, not for hardware trajectories.
     """
-    def __init__(self, limits=None):
+    def __init__(self, limits=None, tip='left_eef'):
         _, joints, _ = parse_urdf(str(URDF))
         by_child = {j['child']: j for j in joints}
-        chain, link = [], 'left_eef'
+        chain, link = [], tip
         while link in by_child:
             joint = by_child[link]
             chain.append(joint)
@@ -79,7 +85,14 @@ class Arm:
 
 def load_config(path):
     c = json.loads(Path(path).read_text())
-    for key in ['block_size_m', 'supply_xy_m', 'stack_xy_m', 'tool_grasp_point_m']:
+    # The robot's own base occupies part of the arm's reachable region: IK happily
+    # converges to points inside the machine. Measured from the URDF meshes below
+    # z=1.2 m as [[x_min, x_max], [y_min, y_max]] in `root`. Not a survey of the
+    # real chassis, and it ignores anything above table height.
+    c.setdefault('base_footprint_m', [[-.094, .094], [-.196, .196]])
+    c.setdefault('base_clearance_m', .01)
+    for key in ['block_size_m', 'supply_xy_m', 'stack_xy_m', 'tool_grasp_point_m',
+                'base_footprint_m']:
         c[key] = np.asarray(c[key], dtype=float)
         if not np.all(np.isfinite(c[key])):
             raise ValueError(f'{key} must be finite')
@@ -89,6 +102,9 @@ def load_config(path):
         raise ValueError('supply_xy_m must contain at least one [x,y] pair')
     if c['stack_xy_m'].shape != (2,):
         raise ValueError('stack_xy_m must be [x,y]')
+    if c['base_footprint_m'].shape != (2, 2) or np.any(
+            c['base_footprint_m'][:, 0] >= c['base_footprint_m'][:, 1]):
+        raise ValueError('base_footprint_m must be [[x_min, x_max], [y_min, y_max]]')
     for key in ['table_height_m', 'clearance_m', 'cartesian_step_m', 'frame_seconds', 'gripper_motion_seconds']:
         if not np.isfinite(c[key]) or c[key] <= 0:
             raise ValueError(f'{key} must be positive and finite')

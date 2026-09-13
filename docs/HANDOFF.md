@@ -8,7 +8,7 @@ start new work from `main`, not from a feature branch. Individual owners are una
 recipe, hardware calibration numbers, the bbos interface reference, and the traps.
 This file is the running log.
 
-**Newest section is [One command: description to simulated build](#one-command-description-to-simulated-build-2026-09-13)**. For hardware, the current
+**Newest section is [2 inch blocks, the chassis in the workspace, and the 0.78 m table](#2-inch-blocks-the-chassis-in-the-workspace-and-the-078-m-table-2026-09-13)**. For hardware, the current
 section is [First hardware execution](#first-hardware-execution-the-build-trajectory-on-the-real-arm-2026-09-12) — the arm has been driven from the simulated
 plan. Earlier sections describe older states and are kept for history; where they
 disagree, the newer section is current.
@@ -24,7 +24,10 @@ The shared source of truth is this repository. `main` includes the gripper geome
 and offline-plan merges (2646ccf), plus `feat/contact-grasp` through 9ec4dea:
 contact physics and its nominal release fix are now integrated into local `main`.
 
-- **Kinematic assembly:** actual URDF, left-arm FK/IK, three 25.4 mm cubes, animated
+- **Blocks are 2 inches across and 1 inch tall** (`block_size_m` `[0.0508, 0.0508,
+  0.0254]`), jaw grasp 0.36 rad and open 0.50 rad. The grasp angle is derived, not
+  measured on hardware. Older sections below describe the 1 inch cube.
+- **Kinematic assembly:** actual URDF, left-arm FK/IK, three cubes, animated
   mimic fingers, 396 frames. Cube attachment remains idealized in this old replay.
 - **Geometry tools:** triangle-clipped jaw-envelope report and physical calibration
   procedure. The old 0.19 rad animation angle does not actually close on the cube
@@ -55,7 +58,7 @@ contact physics and its nominal release fix are now integrated into local `main`
 
 ## Latest verification and remaining limits
 
-All **52 sim tests and 52 compiler tests pass** with physics dependencies
+All **59 sim tests and 52 compiler tests pass** with physics dependencies
 installed (Pillow is additionally needed for the image tests; they skip without it). The kinematic plan now validates **409** frames: `tool_grasp_point_m`
 gained the 18 mm X offset so the assembly grasps where the foam pads actually
 meet the cube, instead of putting the nominal tool origin over the cube centre
@@ -103,6 +106,7 @@ python3 -m venv .venv
 
 # The whole demo in one command (add --check to plan without a viewer):
 .venv/bin/python build_from_description.py "a simple dog" --offline
+.venv/bin/python sim/build_structure.py compiler/examples/smiley.json --save outputs/smiley.rrd
 ```
 
 CoACD is only needed for asset regeneration (`requirements-collision.txt`), not
@@ -114,11 +118,14 @@ normal execution. See [CONTACT_SIM.md](CONTACT_SIM.md) and
 
 | Priority | Next concrete outcome | Owner |
 | --- | --- | --- |
-| 0 | **Stage the 16 cubes and run a real build.** Coordinates are in `outputs/dog-plan.json` under `staging`. Runs so far used an empty table, so nothing has verified that a commanded close actually picks a cube up | Hardware/robotics, unassigned |
+| 0 | **Bring the table down from 0.78 m.** At 0.78 m only a single row of six blocks is buildable: 146 mapped cells against 542 at 0.5 m, measured over a window wide enough to rule out clipping. Nothing else on this list matters at that height | Hardware, unassigned |
+| 0 | **Measure the 2 inch grasp angle on hardware.** `gripper_grasp_rad = 0.36` is derived from the mesh report plus the foam allowance measured on the 1 inch cube. Repeat the 0.2301 measurement with a real 2 inch block | Hardware, unassigned |
+| 0 | **Stage the blocks and run a real build.** Coordinates are in `outputs/dog-plan.json` under `staging`. Runs so far used an empty table, so nothing has verified that a commanded close actually picks a cube up | Hardware/robotics, unassigned |
 | 0 | Add a held-cube check. Gripper current is already published in `arm_state`, and the J7 relief loop's holding current is a natural signal: a close that reaches the commanded angle with no current rise means an empty jaw | Robotics, unassigned |
 | 0 | **Run the model paths once with a real key.** `ANTHROPIC_API_KEY` is not set in this checkout, so every design so far is a library shape or an in-session reply. One key, then `build_from_description.py "a cat"` and the picture path, and record how often a first proposal passes the checks | Compiler, unassigned |
 | 1 | Teach a real `table_surface` pose to replace the set-by-hand 0.5 m, then re-run `sim/reach_map.py` and re-export | Hardware, unassigned |
-| 1 | **First two-layer example.** Everything checked so far is one layer at `z=0`; `BUILD_PLAN.md` asks the live demo for two. Find out whether direct support plus finger clearance admits a recognisable two-layer shape before demo day | Compiler, unassigned |
+| 1 | ~~First two-layer example~~ — **done.** `outputs/face-078.json` is two layers (eyes resting on the mouth) and plans at 0.78 m; `wall-078.json` is a two-layer wall. Neither has run on hardware | Compiler |
+| 1 | **Survey the base footprint.** `base_footprint_m` comes from the URDF meshes, not a measurement of the real chassis, and it now decides which cells are usable | Hardware, unassigned |
 | 1 | Validate collision surfaces and low-friction behavior; calibrate when robot access exists | Robotics, unassigned |
 | 2 | Count the real cubes per colour and pass them as `inventory` — `validate` supports it and nothing uses it, so a 40-cube design can currently call for 26 white cubes nobody owns | Compiler/hardware, unassigned |
 | 2 | Add failure-aware stage transitions and freeze observation/action timing, units, and frames | Robotics/ML, unassigned |
@@ -135,6 +142,132 @@ the placement retry that stopped dropping placeable cubes; and
 slip, then add failure-aware transitions. Do not train on perfect-state
 diagnostic traces unchanged or call the old idealized replay a physical grasp.
 Assume no robot access until confirmed; hardware work need not block simulation.
+
+## 2 inch blocks, the chassis in the workspace, and the 0.78 m table (2026-09-13)
+
+Offline work, on `main`. Three things here matter more than the rest: **the reach map
+was placing cubes inside the robot**, the **0.78 m table cannot be built on**, and the
+blocks are now **2 inches across and 1 inch tall**.
+
+### The reach map included cells inside the robot's own chassis
+
+IK converges happily at points inside the machine, and nothing filtered them out. At
+the 0.5 m table **147 of 542 mapped cells sit inside the base**. With the build ranked
+"as near the robot as possible" that came out as far as **14 of the 16-cube dog's cubes
+placed inside the chassis**. `reach_map.clear_of_base` now drops them, using
+`base_footprint_m` in the config — `x +/-0.094, y +/-0.196`, measured off the URDF
+meshes below z=1.2 m, plus a cube half-width and `base_clearance_m`.
+
+Kept separate from the cached map on purpose: the map is a measurement of the arm, the
+footprint is a fact about the chassis, and they are re-measured by different means.
+
+This also invalidated the old **25.5 degree** carried-tilt figure, which was measured
+on one of those invalid layouts. Valid placements measure **22.8 degrees** for the same
+dog, and the planner now prints the number every run.
+
+### The probe window was cutting the workspace in three places
+
+The 0.5 m map had 246 cells over `x [-0.25, 0.45], y [0.15, 0.50]`. Re-probed over
+`x [-0.35, 0.40], y [-0.20, 0.45]` it has **542**. The workspace is a **ring around the
+base**, not a patch to one side, so "smallest y" was never "nearest the robot" — it is
+the robot's right-hand side. `candidate_origins` now ranks by **radial distance** from
+the base, then margin, then how far forward the build sits. Defaults in
+`sim/reach_map.py` are the wide window, so a re-probe reproduces this.
+
+Table height barely affects the footprint: `lj0` is a 1.03 m lift, so 0.4 m and 0.5 m
+give the same 542 cells.
+
+### The 0.78 m table cannot be built on
+
+Probed over a window reaching out to 0.60 m in both axes, so this is not clipping:
+**146 cells, 140 usable**, and the reachable set spans only `x -0.37..0.36,
+y -0.22..0.41` — a thin annulus, because the arm runs out of vertical travel and has to
+stretch flat. On the 2 inch lattice that leaves **a single row of six blocks**. The
+recorded demo at that height (`outputs/face-078.rrd`) is 8 blocks: a mouth of six with
+two eyes resting on it, because two rows in *plan* is impossible there — rows must be
+50.8 mm apart and the usable rows that far apart share one or two columns.
+
+**The table has to come down.** At 0.5 m the same probe gives 542 cells and 395 usable.
+
+### 2 inch blocks: what changed
+
+`block_size_m` is `[0.0508, 0.0508, 0.0254]`. Height is unchanged, so no vertical
+number moved. Jaw angles are **grasp 0.36 rad, open 0.50 rad**, derived from the mesh
+report — the derivation and its caveat are in
+[ROBOT_SETUP.md](ROBOT_SETUP.md#jaw-angles-for-the-2-inch-block-and-how-they-were-derived).
+The 2 inch grasp angle is derived, **not measured on hardware**.
+
+A cell now covers four times the table area, so:
+
+- the largest solid build area in front of the robot is **10x3 cells** (4x8 the
+  alternative), against 18x7 at 25.4 mm. Defaults in `build_from_description.py` are a
+  10x3 grid and 20 blocks (24 still stages);
+- every example was re-fitted. Library dog **11 blocks**, `rocket.json` **11**,
+  `smiley.json` **10**. The previous versions were up to 0.6 m long and fitted nowhere;
+- `staging_layout` steps by **cells, not reach-map samples**. It had been staging
+  blocks touching each other, since a cell is now two samples wide.
+
+### Other changes in this batch
+
+- **Quarter-turn placement.** `--rotate 0|90|180|270` turns a build on the table; the
+  design is untouched, only which way its own x axis runs. Omitted, the planner tries
+  all four and keeps the best. The finger axis is swapped with the lattice, or the
+  wrist would close across the wrong faces.
+- **`--face`** places the build clear of the chassis nose so the robot looks at it.
+  **Opt-in**, because the arm works folded there: the same structure tips 76 degrees
+  against 33 placed freely. Off by default.
+- **The table is drawn from measurement.** It was a hardcoded box at `x 0.08..0.52`,
+  predating the reach measurement, so builds hovered over nothing. `table_rectangle`
+  now fits one rectangle to the blocks actually on the table and turns it to clear the
+  chassis, reporting when no angle can do both.
+- **`Structure.pieces`.** Connectivity was a hard rule, which rejected a face with dots
+  for eyes. It is a design rule, not a physical one — the arm places one block at a
+  time and never needs two to touch — so a design declares how many parts it has.
+  Default 1, so a stray floating cube is still an error.
+- **Supply placement** prefers slots on the build's side of the robot and furthest
+  along its bearing, so the supply does not wrap around the machine and a single
+  rectangular table can hold everything.
+
+Verified: **59 sim tests** and **52 compiler tests** pass. Recordings regenerated:
+`smiley-050.rrd` (0.5 m, 10 blocks, 944 poses, tilt 30.1 deg) and `face-078.rrd`
+(0.78 m, 8 blocks, 1024 poses, tilt 25.7 deg). Still kinematics with idealized
+attachment, and nothing here has run on hardware.
+
+## The table, and where the build and the supply sit (2026-09-13)
+
+Found by watching a recording: **the cubes were not on the table.** The drawn
+surface was hardcoded at `x 0.08..0.52, y 0.15..0.55`, which predated the reach
+measurement. Measured reach is `x -0.25..0.36, y 0.15..0.40`, and origins are now
+chosen from that map, so a typical build sat at negative x — animated hovering over
+nothing. The box was a leftover, not a survey.
+
+Three changes in `sim/build_structure.py`:
+
+- **`table_box()`** derives the surface from the measured reach plus every cube in
+  the scene, padded by a cube half-width. It is still only a **visual proxy**: the
+  table's position in `root` has never been surveyed, and only its height is set,
+  by hand. It now asserts "the workspace has to be on the table" instead of
+  claiming to know where the table is.
+- **`candidate_origins()` ranks nearest the robot first**, then by margin, then by
+  how well the build centres across the reachable width. Previously margin ranked
+  first, which put builds mid-table. The nearest row turns out to be all-or-nothing
+  on margin — it is the edge of the *probed window* — so without the centring tie
+  break the structure jammed into the corner at the lowest probed x.
+- **`staging_layout()` fills from the far side inwards**, so the supply sits at the
+  opposite end of the table from the build.
+
+For the 16-cube dog the separation is clean: build at `y 0.150..0.201`, supply at
+`y 0.353..0.404`. The reachable band is only ~11 cells deep, so a 9-deep structure
+(house, cat) leaves too few far rows for 40 cubes and the supply wraps around the
+sides. That is measured reach, not a preference, and lowering the table would buy
+depth back.
+
+Recordings regenerated. Pose counts moved slightly because the origins moved:
+house 4109, rocket 2674, cat 3740, dog 1688. Verified: **55 sim tests** (52 before)
+and 52 compiler tests pass. The four new tests assert the properties that were
+silently violated: origins run near to far, the chosen origin is not on the probed
+x edge, staging starts at the far row, and every cube plus the whole reachable band
+lies inside the drawn table.
 
 ## One command: description to simulated build (2026-09-13)
 

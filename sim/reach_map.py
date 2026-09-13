@@ -71,8 +71,31 @@ def load_full(table_height):
 
 
 def load(table_height):
-    """Just the reachable (x, y) set. See `load_full` for the sample spacing."""
+    """Just the reachable (x, y) set. See `load_full` for the sample spacing.
+
+    Raw measurement: cells where IK converged. It does **not** exclude the robot's
+    own base — see `clear_of_base`, which callers apply before placing anything.
+    """
     return load_full(table_height)['cells']
+
+
+def clear_of_base(cells, c):
+    """Drop cells where a cube would intersect the robot's own base.
+
+    IK converging says nothing about whether a point is inside the machine, and it
+    is: the arm is mounted on a mast above the chassis, so part of its reachable
+    disc lands on the robot itself. At the 0.5 m table this removes 27 of 246
+    mapped cells — the three nearest rows — which is exactly where a build placed
+    "as near the robot as possible" would otherwise go.
+
+    Kept separate from the cached map on purpose: the map is a measurement of the
+    arm, this is a geometric fact about the chassis, and the two are re-measured by
+    different means.
+    """
+    (x_min, x_max), (y_min, y_max) = np.asarray(c['base_footprint_m'], dtype=float)
+    pad = float(c['block_size_m'][0])/2 + float(c['base_clearance_m'])
+    return {(x, y) for x, y in cells
+            if not (x_min-pad < x < x_max+pad and y_min-pad < y < y_max+pad)}
 
 
 def main(argv=None):
@@ -80,8 +103,13 @@ def main(argv=None):
     parser.add_argument('--config', type=Path, default=HERE/'assembly_config.json')
     parser.add_argument('--table', type=float, default=None,
                         help='table height in metres (default: from the config)')
-    parser.add_argument('--x', type=float, nargs=2, default=[-.25, .45])
-    parser.add_argument('--y', type=float, nargs=2, default=[.15, .50])
+    # Wide enough to contain the whole reachable disc rather than a slice of it.
+    # The first 0.5 m map was probed over x [-.25, .45], y [.15, .50] and found 246
+    # cells; it was clipped on three sides. The same arm, probed over the window
+    # below, has 542. A window that cuts the workspace silently biases every
+    # placement decision downstream, so keep this wider than the answer.
+    parser.add_argument('--x', type=float, nargs=2, default=[-.35, .40])
+    parser.add_argument('--y', type=float, nargs=2, default=[-.20, .45])
     args = parser.parse_args(argv)
 
     c, arm = load_config(args.config), Arm(HERE/'robot_limits.json')

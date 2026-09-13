@@ -93,11 +93,15 @@ class OfflineDogTests(unittest.TestCase):
         self.assertIn((1, 0, 0), [v.cell for v in voxels])
 
     def test_offline_dog_passes_every_check(self):
+        """Eleven blocks, not the twenty-odd it used to be: blocks are 2 inches across
+        now, so a cell covers four times the table area and the reachable workspace
+        takes a much smaller drawing."""
         dog = offline('a simple dog')
         report = validate(dog)
         self.assertTrue(report.ok, report.codes())
         self.assertEqual(report.counts['layers'], 1)
-        self.assertGreater(report.counts['cubes'], 20)
+        self.assertGreater(report.counts['cubes'], 8)
+        self.assertLessEqual(max(report.counts['footprint']), 10)
 
     def test_offline_structures_are_never_labelled_as_model_output(self):
         self.assertEqual(offline('dog').source, 'offline_library')

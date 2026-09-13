@@ -203,14 +203,34 @@ path can jump. `--origin 0.15 0.2008` is clean; prefer an origin with none.
 | `lj0` units | metres; `lj1`..`lj6` and gripper radians | URDF convention |
 | Gripper sign | URDF rad = `-2*pi*turns` | `gripper_sign = -1` |
 | Gripper range | `[-0.379, 0]` turns (~0 to 2.38 rad) | `ranges.calibration.json` |
-| **Grasp angle** | **0.2301 rad with a 25.4 mm cube held** | **Measured on hardware** |
-| `gripper_grasp_rad` | 0.21 rad (slightly past the measured hold) | `sim/assembly_config.json` |
-| `gripper_open_rad` | 0.35 rad | ~10 mm clearance per side |
+| **Grasp angle (1 inch cube)** | **0.2301 rad with a 25.4 mm cube held** | **Measured on hardware** |
+| `gripper_grasp_rad` | **0.36 rad** for the 2 inch block | derived, see below |
+| `gripper_open_rad` | **0.50 rad** | ~9 mm clearance per side |
 | Gripper torque cap | 300 of 1000 | `torque_limit[7]` |
 | J7 current relief | enabled, `i_hold = 1.5 A`, backoff <= 0.1 turns | `constants.py` |
-| Table height | **0.5 m (set, not surveyed)** | `sim/assembly_config.json` |
-| Cube size | 25.4 mm | confirmed by the user |
+| Table height | **0.5 m (set, not surveyed)**; 0.78 m measured and rejected | `sim/assembly_config.json` |
+| Block size | **50.8 x 50.8 x 25.4 mm** (2 inches across, 1 inch tall) | confirmed by the user |
 | Tool grasp point | `[0.018, 0, 0.004]` m in `left_eef` | foam pad centre offset |
+
+### Jaw angles for the 2 inch block, and how they were derived
+
+The blocks changed from 1 inch cubes to 2 inches across and 1 inch tall. Height is
+unchanged, so **nothing about how far down the arm reaches changed** — only the jaw
+opening. From the mesh report (`docs/gripper_geometry.json`, gap against angle):
+
+| Quantity | 1 inch | 2 inch |
+| --- | --- | --- |
+| Bare width-matching angle | 0.1538 rad | **0.3042 rad** |
+| Hardware hold, with foam | 0.2301 rad (measured) | **0.3806 rad** (bare + the same +0.0763 foam allowance) |
+| `gripper_grasp_rad` | 0.21 | **0.36** (0.02 past the hold, as before) |
+| `gripper_open_rad` | 0.35 | **0.50** (~9 mm clearance per side) |
+
+The 2 inch grasp angle is **derived, not measured**: the foam allowance is carried
+over from the 1 inch hardware measurement. Re-measure with a real block in the jaw
+the way 0.2301 was measured. The joint limit is 1.0 rad and the mesh report covers
+0.6 rad with both fingers on the slab, so there is headroom either way. Fingertip
+clearance above the table grows to about 8 mm at 0.50 rad, which is why the vertical
+numbers did not need touching.
 
 ### The gripper actually grips now — here is why it did not before
 

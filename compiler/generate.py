@@ -76,17 +76,15 @@ SCHEMA = {
 # Hand-authored fallbacks for running the pipeline without model access. These
 # are not model output and are labelled 'offline_library' wherever they appear.
 LIBRARY = {
+    # Three rows and seven columns. The blocks are 2 inches across now, so a cell is
+    # 50.8 mm and the reachable area in front of the robot is about ten cells by
+    # three: the nine-row version of this dog would be 0.6 m long and fits nowhere.
+    # Same subject, reduced to what the measured workspace takes.
     'dog': ("""
-.......OOOOO
-.......O...O
-OOOOOOOO...R
-O..........O
-O.......OOOO
-OOOOOOOO....
-..O....O....
-..O....O....
-..W....W....
-""", 'one-cube-wide dog outline, side profile facing right'),
+Y.....O
+OOOOOOO
+.W...W.
+""", 'dog outline, side profile facing right, tail up and head at the front'),
 }
 GLYPH_COLORS = {'O': 'orange', 'W': 'white', 'R': 'red', 'G': 'green', 'B': 'blue',
                 'Y': 'yellow'}

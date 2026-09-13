@@ -1,10 +1,21 @@
 {
   "block_size_m": [
-    0.0254,
-    0.0254,
+    0.0508,
+    0.0508,
     0.0254
   ],
   "table_height_m": 0.5,
+  "base_footprint_m": [
+    [
+      -0.094,
+      0.094
+    ],
+    [
+      -0.196,
+      0.196
+    ]
+  ],
+  "base_clearance_m": 0.01,
   "supply_xy_m": [
     [
       0.18,
@@ -31,8 +42,8 @@
     0,
     0.004
   ],
-  "gripper_open_rad": 0.35,
-  "gripper_grasp_rad": 0.21,
+  "gripper_open_rad": 0.5,
+  "gripper_grasp_rad": 0.36,
   "gripper_motion_seconds": 0.6,
   "block_colors": [
     "red",

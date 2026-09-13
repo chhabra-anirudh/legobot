@@ -1,5 +1,5 @@
 {
- "table_height_m": 0.5,
+ "table_height_m": 0.4,
  "pitch_m": 0.0254,
  "note": "IK converged for both grip orientations at grasp and travel height",
  "cells": [

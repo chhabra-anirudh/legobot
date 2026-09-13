@@ -1,175 +1,85 @@
 {
   "schema_version": 1,
-  "structure_id": "a-rocket",
-  "name": "Rocket on the pad",
-  "cube_size_m": 0.0254,
+  "structure_id": "rocket",
+  "name": "Rocket in flight",
+  "cube_size_m": 0.0508,
   "source": "claude-opus-5-medium (interactive agent session)",
   "prompt": "a rocket",
   "voxels": [
     {
-      "x": 2,
-      "y": 2,
+      "x": 0,
+      "y": 1,
       "z": 0,
-      "color": "orange"
+      "color": "white"
+    },
+    {
+      "x": 1,
+      "y": 1,
+      "z": 0,
+      "color": "white"
     },
     {
       "x": 2,
-      "y": 3,
+      "y": 1,
       "z": 0,
-      "color": "orange"
+      "color": "white"
     },
     {
       "x": 3,
-      "y": 2,
-      "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 4,
-      "y": 0,
-      "z": 0,
-      "color": "yellow"
-    },
-    {
-      "x": 4,
-      "y": 2,
+      "y": 1,
       "z": 0,
       "color": "white"
     },
     {
       "x": 4,
-      "y": 3,
+      "y": 1,
       "z": 0,
       "color": "white"
-    },
-    {
-      "x": 4,
-      "y": 4,
-      "z": 0,
-      "color": "white"
-    },
-    {
-      "x": 4,
-      "y": 5,
-      "z": 0,
-      "color": "white"
-    },
-    {
-      "x": 4,
-      "y": 6,
-      "z": 0,
-      "color": "white"
-    },
-    {
-      "x": 4,
-      "y": 7,
-      "z": 0,
-      "color": "red"
-    },
-    {
-      "x": 5,
-      "y": 0,
-      "z": 0,
-      "color": "yellow"
     },
     {
       "x": 5,
       "y": 1,
       "z": 0,
-      "color": "orange"
-    },
-    {
-      "x": 5,
-      "y": 2,
-      "z": 0,
       "color": "white"
     },
     {
-      "x": 5,
-      "y": 5,
-      "z": 0,
-      "color": "blue"
-    },
-    {
-      "x": 5,
-      "y": 7,
-      "z": 0,
-      "color": "red"
-    },
-    {
-      "x": 5,
-      "y": 8,
-      "z": 0,
-      "color": "red"
-    },
-    {
       "x": 6,
+      "y": 1,
+      "z": 0,
+      "color": "red"
+    },
+    {
+      "x": 2,
       "y": 0,
       "z": 0,
-      "color": "yellow"
+      "color": "orange"
     },
     {
-      "x": 6,
-      "y": 2,
-      "z": 0,
-      "color": "white"
-    },
-    {
-      "x": 6,
-      "y": 3,
-      "z": 0,
-      "color": "white"
-    },
-    {
-      "x": 6,
-      "y": 4,
-      "z": 0,
-      "color": "white"
-    },
-    {
-      "x": 6,
-      "y": 5,
-      "z": 0,
-      "color": "white"
-    },
-    {
-      "x": 6,
-      "y": 6,
-      "z": 0,
-      "color": "white"
-    },
-    {
-      "x": 6,
-      "y": 7,
-      "z": 0,
-      "color": "red"
-    },
-    {
-      "x": 7,
+      "x": 2,
       "y": 2,
       "z": 0,
       "color": "orange"
     },
     {
-      "x": 8,
-      "y": 2,
+      "x": 4,
+      "y": 0,
       "z": 0,
       "color": "orange"
     },
     {
-      "x": 8,
-      "y": 3,
+      "x": 4,
+      "y": 2,
       "z": 0,
       "color": "orange"
     }
   ],
   "provenance": {
     "mode": "reply",
-    "grid": [
-      12,
-      9
+    "block_m": [
+      0.0508,
+      0.0508,
+      0.0254
     ],
-    "reasoning": "A rocket stands well in a 12x9 grid: one-cube-wide hull walls at x=4 and x=6 rising to a red cone, a blue porthole between them that still has both y-neighbours free so the fingers can reach it, orange fins stepping out at the base, and a yellow flame below the engine bay. Everything is at z=0 so nothing overhangs, the hull is hollow, and no 2x2 area is filled.",
-    "simplified": []
+    "reasoning": "Re-fitted to 2 inch blocks: the old twelve-cell outline would now be 0.6 m long and fits nowhere. A white fuselage with a red nose and four orange fins reads as a rocket in eight cells by three, which is what the measured area allows."
   }
 }
