@@ -116,15 +116,20 @@ normal execution. See [CONTACT_SIM.md](CONTACT_SIM.md) and
 | --- | --- | --- |
 | 0 | **Stage the 16 cubes and run a real build.** Coordinates are in `outputs/dog-plan.json` under `staging`. Runs so far used an empty table, so nothing has verified that a commanded close actually picks a cube up | Hardware/robotics, unassigned |
 | 0 | Add a held-cube check. Gripper current is already published in `arm_state`, and the J7 relief loop's holding current is a natural signal: a close that reaches the commanded angle with no current rise means an empty jaw | Robotics, unassigned |
-| 0 | Check build cells against the reach map in `build_structure.py`, and make a working `--origin` the default, so an out-of-reach build area reports itself instead of failing as `IK failed at ...` | Robotics, unassigned |
+| 0 | **Run the model paths once with a real key.** `ANTHROPIC_API_KEY` is not set in this checkout, so every design so far is a library shape or an in-session reply. One key, then `build_from_description.py "a cat"` and the picture path, and record how often a first proposal passes the checks | Compiler, unassigned |
 | 1 | Teach a real `table_surface` pose to replace the set-by-hand 0.5 m, then re-run `sim/reach_map.py` and re-export | Hardware, unassigned |
+| 1 | **First two-layer example.** Everything checked so far is one layer at `z=0`; `BUILD_PLAN.md` asks the live demo for two. Find out whether direct support plus finger clearance admits a recognisable two-layer shape before demo day | Compiler, unassigned |
 | 1 | Validate collision surfaces and low-friction behavior; calibrate when robot access exists | Robotics, unassigned |
+| 2 | Count the real cubes per colour and pass them as `inventory` — `validate` supports it and nothing uses it, so a 40-cube design can currently call for 26 white cubes nobody owns | Compiler/hardware, unassigned |
 | 2 | Add failure-aware stage transitions and freeze observation/action timing, units, and frames | Robotics/ML, unassigned |
 | 3 | Generate successful contact demonstrations with pose/noise variation; split by episode | ML, depends on 1–2 |
 | 4 | Train behavior cloning and evaluate against the scripted expert on held-out scenes | ML, depends on 3 |
-| Parallel | Prompt and picture to a checked structure, and the executor (coordinates, tool poses, clearance, trajectory) are implemented. **Next:** run the vision path against a live API — it has never been called with credentials — and decide the per-colour cube inventory so `validate(..., inventory=...)` stops being provisional | Compiler, unassigned |
-| Parallel | Pictures currently come out as single-layer outlines. A two-layer picture build (silhouette plus a raised border) is the natural next compiler step, and the two-layer live demo in `BUILD_PLAN.md` still has no example | Compiler, unassigned |
 | Parallel | Confirm robot API, feedback, access, fixtures, and calibration procedure | Hardware, unassigned |
+
+**Done since the last handoff** (do not redo): reach-gated build origins with
+auto-selection; picture input with deterministic reduction to buildable line art;
+the placement retry that stopped dropping placeable cubes; and
+`build_from_description.py`, the one-command description-to-simulated-build path.
 
 **Next robotics action:** validate real foam geometry/compliance and heavier-cube
 slip, then add failure-aware transitions. Do not train on perfect-state

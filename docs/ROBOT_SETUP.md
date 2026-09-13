@@ -11,16 +11,23 @@ Read this, then [HANDOFF.md](HANDOFF.md) for the running log and
 
 ## 1. What this is
 
-A user describes a structure. An LLM proposes a voxel model. A deterministic
-compiler checks it against support, connectivity, colour, budget, and gripper
-clearance rules. A planner turns accepted cells into calibrated root-frame poses,
-solves the arm for every motion, and exports a joint trajectory. A bridge streams
-that trajectory to a real BracketBot arm.
+A user describes a structure — in words, or by handing over a picture. An LLM
+proposes a voxel model. A deterministic compiler checks it against support,
+connectivity, colour, budget, and gripper clearance rules. A planner turns accepted
+cells into calibrated root-frame poses, solves the arm for every motion, and exports
+a joint trajectory. A bridge streams that trajectory to a real BracketBot arm.
 
 ```
-prompt -> LLM -> voxel schema -> checks -> placement plan -> trajectory -> robot bridge
-                                   |                              |
-                             inventory/budgets              arm calibration
+description ─┐
+             ├─> LLM -> voxel schema -> checks -> placement plan -> trajectory -> robot bridge
+picture ─────┘                            |                              |
+                                    inventory/budgets              arm calibration
+```
+
+One command runs everything up to the simulated build:
+
+```sh
+.venv/bin/python build_from_description.py "a small house"
 ```
 
 ## 2. Status: what works, what does not
@@ -28,6 +35,12 @@ prompt -> LLM -> voxel schema -> checks -> placement plan -> trajectory -> robot
 **Works end to end.** A prompt-derived, checked 16-cube structure has been
 planned, exported, and **executed on the real arm twice**. Both runs completed
 with zero joint-range violations.
+
+**Works in simulation (2026-09-13).** Description or picture to a checked structure
+to an animated build with coloured cubes, in one command. The largest examples that
+plan cleanly are 40 cubes (`compiler/examples/house.json`, from a description) and
+36 cubes (`compiler/examples/cat.json`, from a picture). Nothing above 16 cubes has
+been run on hardware.
 
 **Does not work / not implemented:**
 
@@ -45,7 +58,12 @@ with zero joint-range violations.
   carrying frames exceed 10 degrees of tilt. Idealized attachment means the
   simulation never drops anything; two foam pads holding a cube by friction might.
   Locked in by `sim/test_build_structure.py` so it cannot quietly get worse.
-- **No vision**, no magnetic model, no learned policy in the hardware path.
+- **No vision of the workspace**, no magnetic model, no learned policy in the
+  hardware path. The compiler can now read a *picture of what to build*, which is
+  not perception: the robot still cannot see where its cubes are.
+- **No live model call yet.** The API paths for both description and picture are
+  implemented but have never run with credentials. Designs so far came from
+  `--offline` library shapes or from `--request`/`--ingest` answered in-session.
 - **Table height is a set value, not a survey.** See §6.
 
 ## 3. Workstation setup
@@ -55,14 +73,15 @@ Python 3.10+.
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements-physics.txt   # sim + mujoco
-.venv/bin/python -m pip install -r requirements-llm.txt       # anthropic SDK, optional
+.venv/bin/python -m pip install -r requirements-llm.txt       # anthropic SDK + Pillow
 
-.venv/bin/python -m unittest discover -s sim -p 'test_*.py'         # 26 tests
-.venv/bin/python -m unittest discover -s compiler -p 'test_*.py'    # 22 tests
+.venv/bin/python -m unittest discover -s sim -p 'test_*.py'         # 52 tests
+.venv/bin/python -m unittest discover -s compiler -p 'test_*.py'    # 52 tests
 .venv/bin/python sim/simulate_assembly.py --check
 ```
 
-All 48 tests should pass. Nothing here talks to the robot.
+All 104 tests should pass. Nothing here talks to the robot. The image tests skip
+without Pillow; no test calls a model.
 
 ## 4. Robot setup
 
@@ -108,6 +127,12 @@ If `probe_arm.py` reports no state, check the daemon is running:
 # 1. Generate a structure (or use the cached example)
 .venv/bin/python compiler/generate.py "a simple dog" --output outputs/dog.json
 .venv/bin/python compiler/check.py compiler/examples/dog.json --order
+
+#    From a description or a picture, with the simulated build included:
+.venv/bin/python build_from_description.py "a small house" --check \
+    --structure-out outputs/house.json
+.venv/bin/python compiler/image_to_structure.py compiler/examples/images/cat.png \
+    --trace --grid 12 8 --output outputs/cat.json
 
 # 2. Plan and export. Omit --origin and the planner picks one from the reach map.
 .venv/bin/python sim/build_structure.py compiler/examples/dog.json --check \

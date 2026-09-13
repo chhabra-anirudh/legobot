@@ -8,10 +8,13 @@ and 24 working hours. Adjust the schedule to actual robot access and event rules
 
 ## What we are building
 
-A user describes a small structure. An LLM proposes a voxel model. A deterministic
-compiler checks the model against inventory, support, workspace, and gripper
-clearance, then produces a placement sequence. The robot builds it with 25.4 mm
-magnetic cubes using one finger gripper.
+A user describes a small structure, in words or by handing over a picture. An LLM
+proposes a voxel model. A deterministic compiler checks the model against
+inventory, support, workspace, and gripper clearance, then produces a placement
+sequence. The robot builds it with 25.4 mm magnetic cubes using one finger gripper.
+
+`build_from_description.py` is the demo entry point: one command from the
+description to the simulated build.
 
 The learning component is a **pickup policy trained by imitation**. It learns
 small tool movements and gripper actions from demonstrations. It does not decide
@@ -30,7 +33,7 @@ Status marks below are as of 2026-09-12; see [ROBOT_SETUP.md](ROBOT_SETUP.md).
 | Level | Target | Status |
 | --- | --- | --- |
 | First milestone | One cube picked, lifted, held, and placed on the real bot | **Partial.** The arm executes the full build motion on hardware with the gripper driven, but on an empty table and with no held-cube signal. The pick itself is unverified |
-| Minimum live demo | A compiler-approved 4–8 cube structure, two layers, fixed supply poses | Not started. A checked 16-cube single-layer structure plans and executes as motion |
+| Minimum live demo | A compiler-approved 4–8 cube structure, two layers, fixed supply poses | Not started on hardware. In simulation, single-layer structures up to 40 cubes are checked, planned, and animated from a description or a picture; on hardware a 16-cube single-layer structure executes as motion. **Two layers has no example yet, in sim or on hardware** |
 | ML milestone | Behavior-cloned pickup evaluated on held-out randomized poses in contact simulation | Not started |
 | Stretch live demo | Learned pickup on hardware; 15–20 cubes and three layers only after repeatable smaller builds | Not started |
 | Deferred | RL fine-tuning, dual arms, image-to-action learning, arbitrary piles, unsupported bridges | Deferred |
@@ -325,7 +328,8 @@ an authorization or a verified rule set.
 
 ## Immediate next implementation session
 
-Updated 2026-09-12, after the first hardware executions. Ordered.
+Updated 2026-09-13. Ordered. Strike-through items are done; they are kept so the
+next person can see what was already tried.
 
 1. **Add a held-cube signal.** `arm_state.current` is already published and the
    daemon's J7 current-relief loop holds at a target current; a close that reaches
@@ -339,19 +343,33 @@ Updated 2026-09-12, after the first hardware executions. Ordered.
    pre-filters the footprint, auto-selects an origin from the measured map when
    none is given, and suggests fitting origins when one is rejected.
    `sim/build_structure.py` also gained its first test suite.
-4. **Teach a real `table_surface` pose** to replace the set-by-hand 0.5 m table
+4. ~~Give the user one command from a description to a built structure~~ —
+   **done 2026-09-13.** `build_from_description.py`. Pictures work too, via
+   `compiler/image_to_structure.py`.
+5. **Run the model paths against a live API.** Both the description and picture
+   paths are implemented and tested, but no API call has ever been made with
+   credentials: every design so far is a library shape or an in-session reply.
+   Needs one key, then re-run and record how often a first proposal passes.
+6. **Teach a real `table_surface` pose** to replace the set-by-hand 0.5 m table
    height. Reach is extremely sensitive to it: 0.75 m gives 95 reachable cells and
    6 valid build origins, 0.5 m gives 246 and 133.
-5. Extend the top-down grasp primitive into a failure-aware expert with
+7. **Produce the first two-layer example.** Everything built or planned so far is
+   a single layer at `z=0`; the minimum live demo asks for two. Direct support plus
+   finger clearance is a tight constraint above `z=0`, so find out now whether a
+   recognisable two-layer structure exists rather than at demo time.
+8. Extend the top-down grasp primitive into a failure-aware expert with
    observation/action recording. The primitive exists in `sim/contact_grasp.py`;
    the frozen training contract does not. Depends on 1.
-6. Train the first behavior-cloning model only once demonstrations reflect a
+9. Train the first behavior-cloning model only once demonstrations reflect a
    physically successful grasp.
-7. **Decide whether the 25.5 degree transfer tilt matters.** Joint-space transfers
-   do not hold the tool vertical while a cube is carried. Idealized attachment
-   hides it; friction between two foam pads may not. Check it in the contact
-   simulation before assuming it is fine, and do not revert to Cartesian
-   interpolation without re-checking reachability.
+10. **Decide whether the 25.5 degree transfer tilt matters.** Joint-space transfers
+    do not hold the tool vertical while a cube is carried. Idealized attachment
+    hides it; friction between two foam pads may not. Check it in the contact
+    simulation before assuming it is fine, and do not revert to Cartesian
+    interpolation without re-checking reachability.
+11. **Decide the cube inventory.** `validate(..., inventory=...)` exists and is
+    unused, so a design can call for 26 white cubes that nobody owns. Count the
+    real stock per colour and pass it in.
 
 The source document's visibility-aware color allocation is a useful later polish
 item, not a first-day dependency. Keep three or fewer supply colors, fixed pickup
